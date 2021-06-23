@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".testingActivity">
+    <TextView
+        android:id = "@+id/displayTitle"
+        android:layout_width="260dp"
+        android:layout_height="35dp"
+        android:text = "CACI Radio Coverage Statistics"
+        android:textSize = "18dp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@id/Stat_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+    <TextView
+        android:id = "@+id/Stat_title"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:text = "Statistics"
+        android:textSize = "18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:background="@drawable/rounded_corner"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/displayTitle"
+        app:layout_constraintBottom_toTopOf="@+id/SNR_Up"
+        />
+    <TextView
+        android:id = "@+id/SNR_Up"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:text = "@string/SNR_up"
+        android:textSize = "18sp"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:layout_marginTop="10dp"
+        app:layout_constraintRight_toLeftOf="@id/SNR_Down"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Stat_title"
+        app:layout_constraintBottom_toTopOf="@id/peak_SNR_up"
+        />
+    <TextView
+        android:id = "@+id/SNR_Down"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:textSize = "18sp"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:text = "@string/SNR_down"
+        android:layout_marginTop="10dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/SNR_Up"
+        app:layout_constraintTop_toBottomOf="@+id/Stat_title"
+        app:layout_constraintBottom_toTopOf="@id/peak_SNR_down"
+        />
+    <TextView
+        android:id = "@+id/peak_SNR_up"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:textSize = "18sp"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:text = "@string/peak_SNR_up"
+        android:layout_marginTop="10dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/SNR_Up"
+        app:layout_constraintRight_toLeftOf="@id/peak_SNR_down"/>
+
+    <TextView
+        android:id = "@+id/peak_SNR_down"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:textSize = "18sp"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:text = "@string/peak_SNR_down"
+        android:layout_marginTop="10dp"
+        app:layout_constraintLeft_toRightOf="@id/peak_SNR_up"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/SNR_Down"/>
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

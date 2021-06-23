@@ -7,4 +7,12 @@
     <string name="password">Password</string>
     <string name="button_send">SEND</string>
     <string name="login">Login</string>
+    <string name = "SNR_up"><u>SNR Up</u><br/>25.1</string>
+    <string name = "SNR_down"><u>SNR Down</u><br/>25.1</string>
+    <string name = "peak_SNR_up"><u>Peak SNR Up</u><br/>25.1</string>
+    <string name = "peak_SNR_down"><u>Peak SNR Down</u><br/>25.1</string>
+    <string name = "avg_pwr_up"><u>AVG PWR Up</u><br/>25.1</string>
+    <string name = "avg_pwr_down"><u>AVG PWR Down</u><br/>25.1</string>
+    <string name = "peak_PWR_up"><u>Peak PWR Up</u><br/>25.1</string>
+    <string name = "peak_pwr_down"><u>Peak PWR Down</u><br/>25.1</string>
 </resources>
