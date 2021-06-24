@@ -17,4 +17,9 @@
     <string name = "peak_pwr_down"><u>Peak PWR Down</u><br/>25.1</string>
     <string name = "start_stop"><b>Start/Stop</b></string>
     <string name = "export"><b>Export</b></string>
+    <string name = "switch_config"><b>Switch Configurations</b></string>
+    <string name = "cur_sector"><b><u>Current Sector</u></b><br/>Weslaco</string>
+    <string name = "sector">Sector</string>
+    <string name = "tower">Tower</string>
+    <string name = "ok"><b>OK</b></string>
 </resources>
