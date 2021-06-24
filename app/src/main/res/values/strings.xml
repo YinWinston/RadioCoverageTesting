@@ -15,4 +15,6 @@
     <string name = "avg_pwr_down"><u>AVG PWR Down</u><br/>25.1</string>
     <string name = "peak_PWR_up"><u>Peak PWR Up</u><br/>25.1</string>
     <string name = "peak_pwr_down"><u>Peak PWR Down</u><br/>25.1</string>
+    <string name = "start_stop"><b>Start/Stop</b></string>
+    <string name = "export"><b>Export</b></string>
 </resources>
