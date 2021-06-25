@@ -7,7 +7,40 @@
     android:layout_height="match_parent"
     android:background="@color/lightBlue"
     tools:context=".MainActivity">
-
+    <TextView
+        android:id = "@+id/start_title"
+        android:layout_width="270dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/rounded_corner"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:ems="10"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:text = "@string/start_title"
+        app:layout_constraintBottom_toTopOf="@id/enter_login_info"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        />
+    <TextView
+        android:id = "@+id/enter_login_info"
+        android:layout_width="270dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="10dp"
+        android:textColor="@color/black"
+        android:ems="10"
+        android:textSize="18sp"
+        android:textAlignment="center"
+        android:text ="@string/enter_login_info"
+        android:background="@drawable/rect_border"
+        app:layout_constraintBottom_toTopOf="@id/linear"
+        app:layout_constraintTop_toBottomOf="@id/start_title"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        />
     <LinearLayout
         android:id="@+id/linear"
         android:layout_width="270dp"
@@ -19,14 +52,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent=".8">
-
         <EditText
             android:id="@+id/editText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:autofillHints="host"
-            android:background="@color/white"
+            android:background="@drawable/rect_border"
             android:ems="10"
             android:hint="@string/host"
             android:inputType="textPersonName"
@@ -41,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:autofillHints="port"
-            android:background="@color/white"
+            android:background="@drawable/rect_border"
             android:ems="10"
             android:hint="@string/port"
             android:inputType="textPersonName"
@@ -58,7 +90,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:autofillHints="username"
-            android:background="@color/white"
+            android:background="@drawable/rect_border"
             android:ems="10"
             android:hint="@string/username"
             android:inputType="textPersonName"
@@ -78,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:autofillHints="password"
-            android:background="@color/white"
+            android:background="@drawable/rect_border"
             android:ems="10"
             android:hint="@string/password"
             android:inputType="textPassword"
@@ -94,10 +126,23 @@
             android:layout_gravity="center"
             android:layout_marginTop="69dp"
             android:layout_marginBottom="373dp"
-            android:background="#594FAA"
+            android:background="@color/green"
             android:onClick="authenticate"
-            android:text="@string/login"
-            android:textColor="@android:color/background_light"
-            tools:text="@string/button_send" />
+            android:textColor="@color/black"
+            android:text= "@string/login"
+            />
     </LinearLayout>
+    <ImageView
+        android:id = "@+id/start_logo"
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:src="@drawable/caci"
+        android:contentDescription="@string/caci_image_desc"
+        android:layout_marginBottom="30dp"
+        app:layout_constraintTop_toBottomOf="@id/linear"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

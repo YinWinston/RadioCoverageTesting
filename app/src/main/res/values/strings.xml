@@ -6,7 +6,7 @@
     <string name="username">Username</string>
     <string name="password">Password</string>
     <string name="button_send">SEND</string>
-    <string name="login">Login</string>
+    <string name="login"><b>Login</b></string>
     <string name = "SNR_up"><u>SNR Up</u><br/>25.1</string>
     <string name = "SNR_down"><u>SNR Down</u><br/>25.1</string>
     <string name = "peak_SNR_up"><u>Peak SNR Up</u><br/>25.1</string>
@@ -22,4 +22,9 @@
     <string name = "sector">Sector</string>
     <string name = "tower">Tower</string>
     <string name = "ok"><b>OK</b></string>
+    <string name = "coverageTitle"><b><u>CACI Radio Coverage Statistics</u></b></string>
+    <string name = "stat_title"><b>Statistics</b></string>
+    <string name = "start_title"><b><u>CACI Radio Coverage Testing</u></b></string>
+    <string name = "caci_image_desc">CACI Logo</string>
+    <string name = "enter_login_info"><b>Enter Login Information Below</b></string>
 </resources>
