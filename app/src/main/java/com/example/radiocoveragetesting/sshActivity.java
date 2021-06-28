@@ -32,7 +32,7 @@ public class sshActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ssh);
-
+        System.out.println("lol");
         // set output field
         shellOutput = findViewById(R.id.textView);
 
@@ -95,11 +95,14 @@ public class sshActivity extends AppCompatActivity {
                         shellOutput.setText(responseString);
 
                     } catch (IOException e) {
+                        System.out.println("lol1");
                         e.printStackTrace();
                     } finally {
+                        System.out.println("lol2");
                         client.stop();
                     }
                 } catch (Exception e) {
+                    System.out.println("lol3");
                     e.printStackTrace();
                 }
             }
