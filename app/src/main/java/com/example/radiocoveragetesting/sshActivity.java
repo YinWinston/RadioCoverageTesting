@@ -44,7 +44,7 @@ public class sshActivity extends AppCompatActivity {
         password = intent.getStringExtra("password");
 
         // Command which will be executed
-        command = "pwd\n";
+        command = "go\n";
 
         // Setting user.com property manually 
         // since isn't set by default in android
@@ -92,6 +92,7 @@ public class sshActivity extends AppCompatActivity {
                         // Output after converting to string type
                         String responseString = new String(responseStream.toByteArray());
                         System.out.println(responseString);
+                        System.out.println("ll");
                         shellOutput.setText(responseString);
 
                     } catch (IOException e) {
