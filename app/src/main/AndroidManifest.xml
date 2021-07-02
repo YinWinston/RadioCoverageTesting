@@ -18,6 +18,8 @@
         </activity>
         <activity android:name=".sshActivity">
         </activity>
+        <activity android:name=".testingActivity">
+        </activity>
     </application>
 
 </manifest>

@@ -1,0 +1,122 @@
+Index: app/src/main/java/com/example/radiocoveragetesting/sshActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.radiocoveragetesting;\r\n\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.os.Bundle;\r\nimport android.widget.TextView;\r\n\r\nimport androidx.appcompat.app.AppCompatActivity;\r\n\r\nimport org.apache.sshd.client.SshClient;\r\nimport org.apache.sshd.client.channel.ClientChannel;\r\nimport org.apache.sshd.client.channel.ClientChannelEvent;\r\nimport org.apache.sshd.client.session.ClientSession;\r\nimport org.apache.sshd.common.channel.Channel;\r\nimport org.apache.sshd.server.forward.AcceptAllForwardingFilter;\r\n\r\nimport java.io.ByteArrayOutputStream;\r\nimport java.io.IOException;\r\nimport java.io.OutputStream;\r\nimport java.util.EnumSet;\r\nimport java.util.concurrent.TimeUnit;\r\n\r\npublic class sshActivity extends AppCompatActivity {\r\n\r\n    ClientChannel channel;\r\n    TextView shellOutput;\r\n    String host, username, password;\r\n    Integer port;\r\n    String command;\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_ssh);\r\n\r\n        // set output field\r\n        shellOutput = findViewById(R.id.textView);\r\n\r\n        // Get user credentials from indent\r\n        Intent intent = getIntent();\r\n        host = intent.getStringExtra(\"host\");\r\n        port = Integer.parseInt(intent.getStringExtra(\"port\"));\r\n        username = intent.getStringExtra(\"username\");\r\n        password = intent.getStringExtra(\"password\");\r\n\r\n        // Command which will be executed\r\n        command = \"pwd\\n\";\r\n\r\n        // Setting user.com property manually \r\n        // since isn't set by default in android\r\n        String key = \"user.home\";\r\n        Context Syscontext;\r\n        Syscontext = getApplicationContext();\r\n        String val = Syscontext.getApplicationInfo().dataDir;\r\n        System.setProperty(key, val);\r\n\r\n        // Creating a client instance\r\n        final SshClient client = SshClient.setUpDefaultClient();\r\n        client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);\r\n        client.start();\r\n\r\n        // Starting new thread because network processes \r\n        // can interfere with UI if started in main thread\r\n        Thread thread = new Thread(new Runnable() {\r\n            @Override\r\n            public void run() {\r\n                try {\r\n                    // Connection establishment and authentication\r\n                    try (ClientSession session = client.connect(username, host, port).verify(10000).getSession()) {\r\n                        session.addPasswordIdentity(password);\r\n                        session.auth().verify(50000);\r\n                        System.out.println(\"Connection establihed\");\r\n\r\n                        // Create a channel to communicate\r\n                        channel = session.createChannel(Channel.CHANNEL_SHELL);\r\n                        System.out.println(\"Starting shell\");\r\n\r\n                        ByteArrayOutputStream responseStream = new ByteArrayOutputStream();\r\n                        channel.setOut(responseStream);\r\n\r\n                        // Open channel\r\n                        channel.open().verify(5, TimeUnit.SECONDS);\r\n                        try (OutputStream pipedIn = channel.getInvertedIn()) {\r\n                            pipedIn.write(command.getBytes());\r\n                            pipedIn.flush();\r\n                        }\r\n\r\n                        // Close channel\r\n                        channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),\r\n                                TimeUnit.SECONDS.toMillis(5));\r\n\r\n                        // Output after converting to string type\r\n                        String responseString = new String(responseStream.toByteArray());\r\n                        System.out.println(responseString);\r\n                        shellOutput.setText(responseString);\r\n\r\n                    } catch (IOException e) {\r\n                        e.printStackTrace();\r\n                    } finally {\r\n                        client.stop();\r\n                    }\r\n                } catch (Exception e) {\r\n                    e.printStackTrace();\r\n                }\r\n            }\r\n        });\r\n        thread.start();\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/example/radiocoveragetesting/sshActivity.java	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
++++ app/src/main/java/com/example/radiocoveragetesting/sshActivity.java	(date 1624893864780)
+@@ -20,6 +20,7 @@
+ import java.util.EnumSet;
+ import java.util.concurrent.TimeUnit;
+ 
++
+ public class sshActivity extends AppCompatActivity {
+ 
+     ClientChannel channel;
+@@ -36,7 +37,7 @@
+         // set output field
+         shellOutput = findViewById(R.id.textView);
+ 
+-        // Get user credentials from indent
++        // Get user credentials from intent
+         Intent intent = getIntent();
+         host = intent.getStringExtra("host");
+         port = Integer.parseInt(intent.getStringExtra("port"));
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>apply plugin: 'com.android.application'\r\n\r\nandroid {\r\n    compileSdkVersion 29\r\n    buildToolsVersion \"29.0.3\"\r\n\r\n    defaultConfig {\r\n        applicationId \"com.example.radiocoveragetesting\"\r\n        minSdkVersion 22\r\n        targetSdkVersion 29\r\n        versionCode 1\r\n        versionName \"1.0\"\r\n\r\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            minifyEnabled false\r\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\r\n        }\r\n    }\r\n\r\n}\r\n\r\ndependencies {\r\n    implementation fileTree(dir: 'libs', include: ['*.jar'])\r\n\r\n    implementation 'androidx.appcompat:appcompat:1.1.0'\r\n    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'\r\n    implementation 'org.apache.mina:mina-core:3.0.0-M2'\r\n    implementation 'org.apache.sshd:sshd-core:2.1.0'\r\n    implementation 'org.apache.sshd:sshd-putty:2.1.0'\r\n    implementation 'org.apache.sshd:sshd-common:2.1.0'\r\n    implementation 'org.slf4j:slf4j-api:1.7.5'\r\n    implementation 'org.slf4j:slf4j-simple:1.6.4'\r\n    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'\r\n    testImplementation 'junit:junit:4.12'\r\n    androidTestImplementation 'androidx.test.ext:junit:1.1.1'\r\n    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/build.gradle	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
++++ app/build.gradle	(date 1624893332114)
+@@ -21,7 +21,13 @@
+         }
+     }
+ 
++    packagingOptions {
++        exclude 'META-INF/DEPENDENCIES'
++    }
++
+ }
++
++
+ 
+ dependencies {
+     implementation fileTree(dir: 'libs', include: ['*.jar'])
+Index: build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// Top-level build file where you can add configuration options common to all sub-projects/modules.\r\n\r\nbuildscript {\r\n    \r\n    repositories {\r\n        google()\r\n        jcenter()\r\n        \r\n    }\r\n    dependencies {\r\n        classpath 'com.android.tools.build:gradle:3.6.3'\r\n        \r\n\r\n        // NOTE: Do not place your application dependencies here; they belong\r\n        // in the individual module build.gradle files\r\n    }\r\n}\r\n\r\nallprojects {\r\n    repositories {\r\n        google()\r\n        jcenter()\r\n        \r\n    }\r\n}\r\n\r\ntask clean(type: Delete) {\r\n    delete rootProject.buildDir\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- build.gradle	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
++++ build.gradle	(date 1624893136543)
+@@ -8,7 +8,7 @@
+         
+     }
+     dependencies {
+-        classpath 'com.android.tools.build:gradle:3.6.3'
++        classpath 'com.android.tools.build:gradle:4.2.1'
+         
+ 
+         // NOTE: Do not place your application dependencies here; they belong
+@@ -27,3 +27,5 @@
+ task clean(type: Delete) {
+     delete rootProject.buildDir
+ }
++
++
+Index: .idea/jarRepositories.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/jarRepositories.xml	(date 1624645705272)
++++ .idea/jarRepositories.xml	(date 1624645705272)
+@@ -0,0 +1,25 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="RemoteRepositoriesConfiguration">
++    <remote-repository>
++      <option name="id" value="central" />
++      <option name="name" value="Maven Central repository" />
++      <option name="url" value="https://repo1.maven.org/maven2" />
++    </remote-repository>
++    <remote-repository>
++      <option name="id" value="jboss.community" />
++      <option name="name" value="JBoss Community repository" />
++      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
++    </remote-repository>
++    <remote-repository>
++      <option name="id" value="BintrayJCenter" />
++      <option name="name" value="BintrayJCenter" />
++      <option name="url" value="https://jcenter.bintray.com/" />
++    </remote-repository>
++    <remote-repository>
++      <option name="id" value="Google" />
++      <option name="name" value="Google" />
++      <option name="url" value="https://dl.google.com/dl/android/maven2/" />
++    </remote-repository>
++  </component>
++</project>
+\ No newline at end of file
+Index: gradle/wrapper/gradle-wrapper.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#Thu Jun 17 14:26:25 EDT 2021\r\ndistributionBase=GRADLE_USER_HOME\r\ndistributionPath=wrapper/dists\r\nzipStoreBase=GRADLE_USER_HOME\r\nzipStorePath=wrapper/dists\r\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-5.6.4-all.zip\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>windows-1252
+===================================================================
+--- gradle/wrapper/gradle-wrapper.properties	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
++++ gradle/wrapper/gradle-wrapper.properties	(date 1624645656633)
+@@ -3,4 +3,4 @@
+ distributionPath=wrapper/dists
+ zipStoreBase=GRADLE_USER_HOME
+ zipStorePath=wrapper/dists
+-distributionUrl=https\://services.gradle.org/distributions/gradle-5.6.4-all.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-6.7.1-all.zip

@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
+
 public class sshActivity extends AppCompatActivity {
 
     ClientChannel channel;
@@ -36,7 +37,7 @@ public class sshActivity extends AppCompatActivity {
         // set output field
         shellOutput = findViewById(R.id.textView);
 
-        // Get user credentials from indent
+        // Get user credentials from intent
         Intent intent = getIntent();
         host = intent.getStringExtra("host");
         port = Integer.parseInt(intent.getStringExtra("port"));
@@ -94,6 +95,25 @@ public class sshActivity extends AppCompatActivity {
                         System.out.println(responseString);
                         System.out.println("ll");
                         shellOutput.setText(responseString);
+
+                        //lets try looping this to test how quick session closed
+                        // Open channel 2nd time
+                        // channel.open().verify(5, TimeUnit.SECONDS);
+                        command = "go\n";
+                        try (OutputStream pipedIn = channel.getInvertedIn()) {
+                            pipedIn.write(command.getBytes());
+                            pipedIn.flush();
+                        }
+
+                        // Close channel
+                        channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),
+                                TimeUnit.SECONDS.toMillis(5));
+                        // Output after converting to string type
+                        String responseString2 = new String(responseStream.toByteArray());
+                        System.out.println(responseString2);
+                        shellOutput.setText(responseString2);
+
+
 
                     } catch (IOException e) {
                         System.out.println("lol1");
