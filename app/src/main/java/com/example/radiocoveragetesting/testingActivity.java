@@ -2,11 +2,13 @@ package com.example.radiocoveragetesting;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -43,9 +45,10 @@ public class testingActivity extends AppCompatActivity {
     ClientSession sshSession;
     ClientChannel sshChannel;
     ByteArrayOutputStream responseStream;
-    Runnable updater;
+    Runnable updater, establishSsh;
     SshClient client;
     Handler mainHandler;
+    HandlerThread thread;
     ByteArrayOutputStream errStream;
     private boolean justStarted;
 
@@ -86,62 +89,88 @@ public class testingActivity extends AppCompatActivity {
 
 
 
-
-        // Creating a client instance
-        client = SshClient.setUpDefaultClient();
-        client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
-        client.start();
-        //mainHandler allows a background thread to access main thread and update ui
-        //mainHandler = new Handler();
-
-
-
-        HandlerThread thread = new HandlerThread("MyHandlerThread");
-        thread.start();
-        //sshHandler allows main thread to post runnable to background thread
-        sshHandler = new Handler(thread.getLooper());
-
-        //make a runnable to establish ssh session in background
-        Runnable establishSsh = new Runnable() {
+        //Setting onClick Listener for Start/Stop Button
+        startStop.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                try {
-                    establishSshSession();
+            public void onClick(View v) {
+                //Checks if button should start/stop ssh session
+                if(startStop.getText().equals("Start")) {
+                    // Changes State of Button
+                    startStop.setText("Stop");
+                    startStop.setBackgroundColor(Color.RED);
+
+                    // Creating a client instance
+                    client = SshClient.setUpDefaultClient();
+                    client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
+                    client.start();
+                    //mainHandler allows a background thread to access main thread and update ui
+                    //mainHandler = new Handler();
+
+
+
+                    thread = new HandlerThread("MyHandlerThread");
+                    thread.start();
+                    //sshHandler allows main thread to post runnable to background thread
+                    sshHandler = new Handler(thread.getLooper());
+
+                    //make a runnable to establish ssh session in background
+                    establishSsh = new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                establishSshSession();
+                            }
+                            catch (Exception e) {
+                                System.out.println("issue 1");
+                                e.printStackTrace();
+                            }
+                        }
+                    };
+
+                    //activate the said runnable in background
+                    sshHandler.post(establishSsh);
+
+                    System.out.println("ssh established");
+                    mainHandler = new Handler(Looper.getMainLooper());
+
+                    //create another runnable, for updates
+                    updater = new Runnable() {
+                        @Override
+                        public void run() {
+                            ArrayList<String> stat = fetchStats();
+
+                            Runnable myRunnable = new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateStat(stat);
+                                    System.out.println("myRunnable running");
+                                }
+                            };
+
+                            mainHandler.post(myRunnable);
+                            sshHandler.postDelayed(updater,1000);
+                        }
+                    };
+                    System.out.println("start update");
+                    sshHandler.post(updater);
                 }
-                catch (Exception e) {
-                    System.out.println("issue 1");
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        //activate the said runnable in background
-        sshHandler.post(establishSsh);
-
-        System.out.println("ssh established");
-        mainHandler = new Handler(Looper.getMainLooper());
-
-        //create another runnable, for updates
-        updater = new Runnable() {
-            @Override
-            public void run() {
-                ArrayList<String> stat = fetchStats();
-
-                Runnable myRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        updateStat(stat);
-                        System.out.println("myRunnable running");
+                else {
+                    // Changes State of Button
+                    startStop.setText("Start");
+                    startStop.setBackgroundColor(Color.GREEN);
+                    try {
+                        sshHandler.removeCallbacks(updater);
+                        sshHandler.removeCallbacks(establishSsh);
+                        client.close();
+                        thread.interrupt();
+                        System.out.println("Successfully Closed");
                     }
-                };
-
-                mainHandler.post(myRunnable);
-                sshHandler.postDelayed(updater,1000);
+                    catch(Exception e) {
+                        System.out.println("Either failed to close client or client did not exist");
+                    }
+                }
             }
-        };
-        System.out.println("start update");
-        sshHandler.post(updater);
-
+        });
     }
 
     /**

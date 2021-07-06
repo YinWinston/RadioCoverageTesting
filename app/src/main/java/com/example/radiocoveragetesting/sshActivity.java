@@ -70,7 +70,7 @@ public class sshActivity extends AppCompatActivity {
                     try (ClientSession session = client.connect(username, host, port).verify(10000).getSession()) {
                         session.addPasswordIdentity(password);
                         session.auth().verify(50000);
-                        System.out.println("Connection establihed");
+                        System.out.println("Connection established");
 
                         // Create a channel to communicate
                         channel = session.createChannel(Channel.CHANNEL_SHELL);
