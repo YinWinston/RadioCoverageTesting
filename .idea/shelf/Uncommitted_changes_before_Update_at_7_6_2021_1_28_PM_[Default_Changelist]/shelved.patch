@@ -1,0 +1,278 @@
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\r\n    <string name=\"app_name\">gfg_ssh</string>\r\n    <string name=\"host\">Host</string>\r\n    <string name=\"port\">Port</string>\r\n    <string name=\"defaultPort\">22</string>\r\n    <string name=\"username\">Username</string>\r\n    <string name=\"password\">Password</string>\r\n    <string name=\"button_send\">SEND</string>\r\n    <string name=\"login\"><b>Login</b></string>\r\n    <string name = \"SNR_up\"><u>SNR Up</u><br/>25.1</string>\r\n    <string name = \"SNR_down\"><u>SNR Down</u><br/>25.1</string>\r\n    <string name = \"peak_SNR_up\"><u>Peak SNR Up</u><br/>25.1</string>\r\n    <string name = \"peak_SNR_down\"><u>Peak SNR Down</u><br/>25.1</string>\r\n    <string name = \"avg_pwr_up\"><u>AVG PWR Up</u><br/>25.1</string>\r\n    <string name = \"avg_pwr_down\"><u>AVG PWR Down</u><br/>25.1</string>\r\n    <string name = \"peak_PWR_up\"><u>Peak PWR Up</u><br/>25.1</string>\r\n    <string name = \"peak_pwr_down\"><u>Peak PWR Down</u><br/>25.1</string>\r\n    <string name = \"start_stop\"><b>Start/Stop</b></string>\r\n    <string name = \"export\"><b>Export</b></string>\r\n    <string name = \"switch_config\"><b>Switch Configurations</b></string>\r\n    <string name = \"cur_sector\"><b><u>Current Sector</u></b><br/>Weslaco</string>\r\n    <string name = \"sector\">Sector</string>\r\n    <string name = \"tower\">Tower</string>\r\n    <string name = \"ok\"><b>OK</b></string>\r\n    <string name = \"coverageTitle\"><b><u>CACI Radio Coverage Statistics</u></b></string>\r\n    <string name = \"stat_title\"><b>Statistics</b></string>\r\n    <string name = \"start_title\"><b><u>CACI Radio Coverage Testing</u></b></string>\r\n    <string name = \"caci_image_desc\">CACI Logo</string>\r\n    <string name = \"enter_login_info\"><b>Enter Login Information Below</b></string>\r\n    <string name = \"test_button\"><b>Test</b></string>\r\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/values/strings.xml	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
++++ app/src/main/res/values/strings.xml	(date 1625585640529)
+@@ -28,4 +28,32 @@
+     <string name = "caci_image_desc">CACI Logo</string>
+     <string name = "enter_login_info"><b>Enter Login Information Below</b></string>
+     <string name = "test_button"><b>Test</b></string>
++    <string-array name="Base_station_list">
++        <item>DEA DO</item>
++        <item>Edinberg</item>
++        <item>Mission TX</item>
++        <item>Weslaco</item>
++    </string-array>
++    <string-array name="DEA_DO_sector_list">
++        <item>DEA_NW</item>
++        <item>DEA_NE</item>
++        <item>DEA_SE</item>
++        <item>DEA_SW</item>
++    </string-array>
++    <string-array name="Edinberg_sector_list">
++        <item>Edinberg_W</item>
++        <item>Edinberg_E</item>
++        <item>Edinberg_S</item>
++    </string-array>
++    <string-array name="Mission_sector_list">
++        <item>Mission_W</item>
++        <item>Mission_N</item>
++        <item>Mission_E</item>
++    </string-array>
++    <string-array name="Weslaco_sector_list">
++        <item>Weslaco_NW</item>
++        <item>Weslaco_NE</item>
++        <item>Weslaco_SE</item>
++        <item>Weslaco_SW</item>
++    </string-array>
+ </resources>
+\ No newline at end of file
+Index: app/src/main/java/com/example/radiocoveragetesting/testingActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.radiocoveragetesting;\r\n\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.os.Bundle;\r\nimport android.os.Handler;\r\nimport android.os.HandlerThread;\r\nimport android.os.Looper;\r\nimport android.util.Log;\r\nimport android.widget.Button;\r\nimport android.widget.TextView;\r\n\r\nimport androidx.appcompat.app.AppCompatActivity;\r\n\r\nimport org.apache.sshd.client.SshClient;\r\nimport org.apache.sshd.client.channel.ClientChannel;\r\nimport org.apache.sshd.client.session.ClientSession;\r\nimport org.apache.sshd.common.channel.Channel;\r\nimport org.apache.sshd.common.channel.exception.SshChannelOpenException;\r\nimport org.apache.sshd.server.forward.AcceptAllForwardingFilter;\r\nimport java.io.ByteArrayOutputStream;\r\nimport java.io.IOException;\r\nimport java.io.OutputStream;\r\nimport java.util.ArrayList;\r\nimport java.util.Objects;\r\nimport java.util.concurrent.TimeUnit;\r\n\r\npublic class testingActivity extends AppCompatActivity {\r\n\r\n    TextView snrUp;\r\n    TextView snrDown;\r\n    TextView peakSnrUp;\r\n    TextView peakSnrDown;\r\n    TextView avgPwrUp;\r\n    TextView avgPwrDown;\r\n    TextView peakPwrUp;\r\n    TextView peakPwrDown;\r\n    Button startStop;\r\n    Button export;\r\n    String host, username, password;\r\n    Integer port;\r\n    Handler sshHandler;\r\n    ClientSession sshSession;\r\n    ClientChannel sshChannel;\r\n    ByteArrayOutputStream responseStream;\r\n    Runnable updater;\r\n    SshClient client;\r\n    Handler mainHandler;\r\n    ByteArrayOutputStream errStream;\r\n    private boolean justStarted;\r\n\r\n\r\n\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        Log.d(\"test\", \"the testingActivity works\");\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_testing);\r\n\r\n        Intent intent = getIntent();\r\n\r\n        snrUp = findViewById(R.id.SNR_Up);\r\n        snrDown = findViewById(R.id.SNR_Down);\r\n        peakSnrUp = findViewById(R.id.peak_SNR_up);\r\n        peakSnrDown = findViewById(R.id.peak_SNR_down);\r\n        avgPwrUp = findViewById(R.id.avg_PWR_up);\r\n        avgPwrDown = findViewById(R.id.avg_PWR_down);\r\n        peakPwrUp = findViewById(R.id.peak_PWR_up);\r\n        peakPwrDown = findViewById(R.id.peak_PWR_down);\r\n        startStop = findViewById(R.id.start_stop);\r\n        export = findViewById(R.id.export);\r\n\r\n        //get login cred from intent\r\n        host = intent.getStringExtra(\"host\");\r\n        port = Integer.parseInt(intent.getStringExtra(\"port\"));\r\n        username = intent.getStringExtra(\"username\");\r\n        password = intent.getStringExtra(\"password\");\r\n\r\n        //I don't get what this does, but the code breaks without it\r\n        // Setting user.com property manually\r\n        // since isn't set by default in android\r\n        String key = \"user.home\";\r\n        Context sysContext;\r\n        sysContext = getApplicationContext();\r\n        String val = sysContext.getApplicationInfo().dataDir;\r\n        System.setProperty(key, val);\r\n\r\n\r\n\r\n\r\n        // Creating a client instance\r\n        client = SshClient.setUpDefaultClient();\r\n        client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);\r\n        client.start();\r\n        //mainHandler allows a background thread to access main thread and update ui\r\n        //mainHandler = new Handler();\r\n\r\n\r\n\r\n        HandlerThread thread = new HandlerThread(\"MyHandlerThread\");\r\n        thread.start();\r\n        //sshHandler allows main thread to post runnable to background thread\r\n        sshHandler = new Handler(thread.getLooper());\r\n\r\n        //make a runnable to establish ssh session in background\r\n        Runnable establishSsh = new Runnable() {\r\n            @Override\r\n            public void run() {\r\n                try {\r\n                    establishSshSession();\r\n                }\r\n                catch (Exception e) {\r\n                    System.out.println(\"issue 1\");\r\n                    e.printStackTrace();\r\n                }\r\n            }\r\n        };\r\n\r\n        //activate the said runnable in background\r\n        sshHandler.post(establishSsh);\r\n\r\n        System.out.println(\"ssh established\");\r\n        mainHandler = new Handler(Looper.getMainLooper());\r\n\r\n        //create another runnable, for updates\r\n        updater = new Runnable() {\r\n            @Override\r\n            public void run() {\r\n                ArrayList<String> stat = fetchStats();\r\n\r\n                Runnable myRunnable = new Runnable() {\r\n                    @Override\r\n                    public void run() {\r\n                        updateStat(stat);\r\n                        System.out.println(\"myRunnable running\");\r\n                    }\r\n                };\r\n\r\n                mainHandler.post(myRunnable);\r\n                sshHandler.postDelayed(updater,1000);\r\n            }\r\n        };\r\n        System.out.println(\"start update\");\r\n        sshHandler.post(updater);\r\n\r\n    }\r\n\r\n    /**\r\n     * Updates stat TextViews\r\n     * Make sure to post it to mainHandler if using it in background\r\n     * @param stat ArrayList of stats\r\n     */\r\n    private void updateStat(ArrayList<String> stat) {\r\n\r\n        System.out.println(\"updateStat() running\");\r\n\r\n        if (stat.size() > 7) {\r\n\r\n            snrUp.setText(stat.get(0));\r\n            snrDown.setText(stat.get(1));\r\n            peakSnrUp.setText(stat.get(2));\r\n            peakSnrDown.setText(stat.get(3));\r\n            avgPwrUp.setText(stat.get(4));\r\n            avgPwrDown.setText(stat.get(5));\r\n            peakPwrUp.setText(stat.get(6));\r\n            peakPwrDown.setText(stat.get(7));\r\n        }\r\n\r\n    }\r\n\r\n\r\n    /**\r\n     * Obtains the current stats and returns it\r\n     * currently uses the command \"go\"\r\n     * @return Array of list of strings that contain signal stat\r\n     */\r\n    private ArrayList<String> fetchStats() {\r\n        //change the command to new command that returns current stats later\r\n        String command = \"go\\n\";\r\n        System.out.println(\"fetchStats() running)\");\r\n        ArrayList<String> ans = new ArrayList<>();\r\n        try {\r\n\r\n            // Open channel\r\n            sshChannel.open().verify(5, TimeUnit.SECONDS);\r\n            sshSession.resetIdleTimeout();\r\n\r\n            try {\r\n                OutputStream pipedIn = sshChannel.getInvertedIn();\r\n                pipedIn.write(command.getBytes());\r\n                System.out.println(\"sending command\");\r\n                pipedIn.flush();\r\n                pipedIn.close();\r\n            }\r\n            catch (Exception e) {\r\n                e.printStackTrace();\r\n            }\r\n\r\n            //You gotta capture the string rather than\r\n            //scan it with scanner line-by-line because the stream constantly adds more\r\n            String responseString = new String(responseStream.toByteArray());\r\n            System.out.println(\"response string: \\n\" + responseString);\r\n            //break down the string into lines\r\n            String[] response = responseString.trim().split(\"\\n\");\r\n\r\n            //if this is first time the method is running since ssh connection\r\n            //was established, the output format will be wrong, so skip it once\r\n            if(!justStarted) {\r\n                //find the line containing the info we want\r\n                String answerLine = response[response.length - 2];\r\n                System.out.println(\"Testing line: \" + answerLine);//show it to log to manually check\r\n                //formatting the string\r\n                String[] answerArray = answerLine.split(\",\");\r\n\r\n                //I just did response 4-11 because I don't know the actual format of stats\r\n                ans.add(answerArray[4]);  //snrUp\r\n                ans.add(answerArray[5]);  //snrDown\r\n                ans.add(answerArray[6]);  //peakSnrUp\r\n                ans.add(answerArray[7]);  //peakSnrDown\r\n                ans.add(answerArray[8]);  //avgPwrUp\r\n                ans.add(answerArray[9]);  //avgPwrDown\r\n                ans.add(answerArray[10]); //peakPwrUp\r\n                ans.add(answerArray[11]); //peakPwrDown\r\n            }\r\n            justStarted = false;\r\n        }\r\n        catch (Exception e) {\r\n            System.out.println(\"error in opening channel or getting response at fetchStat()\");\r\n            if(e instanceof SshChannelOpenException && Objects.requireNonNull(e.getMessage()).trim().equals(\r\n                    \"open failed\")) {\r\n                sshChannel.close(true);\r\n                sshSession.close(true);\r\n                try {\r\n                    responseStream.close();\r\n                }\r\n                catch (IOException e2) {\r\n                    e2.printStackTrace();\r\n                }\r\n                try {\r\n                    errStream.close();\r\n                }\r\n                catch (IOException e2) {\r\n                    e2.printStackTrace();\r\n                }\r\n                establishSshSession();\r\n                fetchStats();\r\n\r\n            }\r\n            System.out.println(\"stacktrace for why first attempt failed\");\r\n            e.printStackTrace();\r\n        }\r\n        return ans;\r\n    }\r\n\r\n    /**\r\n     * Establishes sshSession\r\n     * Pretty sure that you need to call it in background thread.\r\n     * use sshHandler.post() to run it in background\r\n     * @return true if session is successfully established, else false\r\n     */\r\n    private boolean establishSshSession(){\r\n\r\n        try {\r\n            sshSession = client.connect(username, host, port).verify(10000).getSession();\r\n            sshSession.addPasswordIdentity(password);\r\n            sshSession.auth().verify(50000);\r\n            sshChannel = sshSession.createChannel(Channel.CHANNEL_SHELL);\r\n            responseStream = new ByteArrayOutputStream();\r\n            sshChannel.setOut(responseStream);\r\n            //set error stream\r\n            errStream = new ByteArrayOutputStream();\r\n            sshChannel.setErr(errStream);\r\n            justStarted = true;\r\n            return true;\r\n        }\r\n        catch (Exception e) {\r\n            System.out.println(\"failed to establish session\");\r\n            e.printStackTrace();\r\n            return false;\r\n        }\r\n    }\r\n\r\n    @Override\r\n    protected void onDestroy() {\r\n        super.onDestroy();\r\n        sshHandler.removeCallbacksAndMessages(null);\r\n        sshHandler.getLooper().quit();\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/example/radiocoveragetesting/testingActivity.java	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
++++ app/src/main/java/com/example/radiocoveragetesting/testingActivity.java	(date 1625587717464)
+@@ -7,7 +7,11 @@
+ import android.os.HandlerThread;
+ import android.os.Looper;
+ import android.util.Log;
++import android.view.View;
++import android.widget.AdapterView;
++import android.widget.ArrayAdapter;
+ import android.widget.Button;
++import android.widget.Spinner;
+ import android.widget.TextView;
+ 
+ import androidx.appcompat.app.AppCompatActivity;
+@@ -25,7 +29,7 @@
+ import java.util.Objects;
+ import java.util.concurrent.TimeUnit;
+ 
+-public class testingActivity extends AppCompatActivity {
++public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+ 
+     TextView snrUp;
+     TextView snrDown;
+@@ -56,6 +60,14 @@
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.activity_testing);
+ 
++        Spinner spinnerBaseStation = findViewById(R.id.select_sector);
++        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
++        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
++        spinnerBaseStation.setAdapter(adapter1);
++        spinnerBaseStation.setOnItemSelectedListener(this);
++
++
++
+         Intent intent = getIntent();
+ 
+         snrUp = findViewById(R.id.SNR_Up);
+@@ -285,4 +297,14 @@
+         sshHandler.removeCallbacksAndMessages(null);
+         sshHandler.getLooper().quit();
+     }
++
++    @Override
++    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
++
++    }
++
++    @Override
++    public void onNothingSelected(AdapterView<?> adapterView) {
++
++    }
+ }
+Index: app/src/main/res/layout/activity_testing.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<androidx.constraintlayout.widget.ConstraintLayout\r\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\"\r\n    android:layout_width=\"match_parent\"\r\n    android:layout_height=\"match_parent\"\r\n    android:background=\"@color/lightBlue\"\r\n    tools:context=\".testingActivity\">\r\n    <TextView\r\n        android:id = \"@+id/displayTitle\"\r\n        android:layout_width=\"260dp\"\r\n        android:layout_height=\"35dp\"\r\n        android:text = \"@string/coverageTitle\"\r\n        android:textSize = \"18sp\"\r\n        android:textStyle=\"bold\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:layout_marginBottom=\"10dp\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/Stat_title\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintTop_toTopOf=\"parent\"\r\n        />\r\n    <TextView\r\n        android:id = \"@+id/Stat_title\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"40dp\"\r\n        android:text = \"@string/stat_title\"\r\n        android:textSize = \"18sp\"\r\n        android:textStyle=\"bold\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:background=\"@drawable/rounded_corner\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@+id/displayTitle\"\r\n        app:layout_constraintBottom_toTopOf=\"@+id/SNR_Up\"\r\n        />\r\n    <TextView\r\n        android:id = \"@+id/SNR_Up\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:text = \"@string/SNR_up\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/SNR_Down\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@+id/Stat_title\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/peak_SNR_up\"\r\n        />\r\n    <TextView\r\n        android:id = \"@+id/SNR_Down\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/SNR_down\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/SNR_Up\"\r\n        app:layout_constraintTop_toBottomOf=\"@+id/Stat_title\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/peak_SNR_down\"\r\n        />\r\n    <TextView\r\n        android:id = \"@+id/peak_SNR_up\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/peak_SNR_up\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/SNR_Up\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/peak_SNR_down\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/avg_PWR_up\"/>\r\n\r\n    <TextView\r\n        android:id = \"@+id/peak_SNR_down\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/peak_SNR_down\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/peak_SNR_up\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/SNR_Down\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/avg_PWR_down\"/>\r\n\r\n    <TextView\r\n        android:id = \"@+id/avg_PWR_up\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/avg_pwr_up\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/peak_SNR_up\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/peak_SNR_down\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/peak_PWR_up\"/>\r\n    <TextView\r\n        android:id = \"@+id/avg_PWR_down\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/avg_pwr_down\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/avg_PWR_up\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/peak_SNR_down\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/peak_PWR_down\"/>\r\n    <TextView\r\n        android:id = \"@+id/peak_PWR_up\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/peak_PWR_up\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/avg_PWR_up\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/peak_SNR_down\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/start_stop\"/>\r\n    <TextView\r\n        android:id = \"@+id/peak_PWR_down\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/peak_pwr_down\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/peak_PWR_up\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/avg_PWR_down\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/export\"/>\r\n    <Button\r\n        android:id = \"@+id/start_stop\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:text=\"@string/start_stop\"\r\n        android:background=\"@color/green\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/switch_config\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/peak_PWR_up\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/export\"/>\r\n    <Button\r\n        android:id = \"@+id/export\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:text=\"@string/export\"\r\n        android:background=\"@color/blue\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/peak_PWR_down\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/start_stop\"\r\n        />\r\n    <TextView\r\n        android:id = \"@+id/switch_config\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:text = \"@string/switch_config\"\r\n        android:textSize = \"18sp\"\r\n        android:textStyle=\"bold\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:background=\"@drawable/rounded_corner\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@+id/start_stop\"\r\n        app:layout_constraintBottom_toTopOf=\"@id/cur_sector\"\r\n        />\r\n    <TextView\r\n        android:id = \"@+id/cur_sector\"\r\n        android:layout_width=\"150dp\"\r\n        android:layout_height=\"50dp\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:text = \"@string/cur_sector\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:lineSpacingExtra=\"3dp\"\r\n        android:background=\"@drawable/rect_border\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/switch_config\"\r\n        />\r\n    <Spinner\r\n        android:id=\"@+id/select_sector\"\r\n        android:layout_width=\"120dp\"\r\n        android:layout_height=\"40dp\"\r\n        android:hint = \"@string/sector\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:background=\"@android:drawable/btn_dropdown\"\r\n        android:spinnerMode=\"dropdown\"\r\n        android:layout_marginTop=\"10dp\"\r\n        app:layout_constraintLeft_toLeftOf=\"parent\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/cur_sector\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/ok_sector\"\r\n        />\r\n    <Button\r\n        android:id = \"@+id/ok_sector\"\r\n        android:layout_width=\"50dp\"\r\n        android:layout_height=\"40dp\"\r\n        android:text=\"@string/ok\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:background=\"@color/green\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/select_sector\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/cur_sector\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/select_tower\"\r\n        />\r\n    <Spinner\r\n        android:id=\"@+id/select_tower\"\r\n        android:layout_width=\"120dp\"\r\n        android:layout_height=\"40dp\"\r\n        android:text = \"@string/tower\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:background=\"@android:drawable/btn_dropdown\"\r\n        android:spinnerMode=\"dropdown\"\r\n        android:layout_marginTop=\"10dp\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/cur_sector\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/ok_sector\"\r\n        app:layout_constraintRight_toLeftOf=\"@id/ok_tower\"/>\r\n    <Button\r\n        android:id = \"@+id/ok_tower\"\r\n        android:layout_width=\"50dp\"\r\n        android:layout_height=\"40dp\"\r\n        android:text=\"@string/ok\"\r\n        android:textSize = \"18sp\"\r\n        android:gravity=\"center\"\r\n        android:textAlignment=\"center\"\r\n        android:layout_marginTop=\"10dp\"\r\n        android:background=\"@color/green\"\r\n        app:layout_constraintLeft_toRightOf=\"@id/select_tower\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/cur_sector\"\r\n        app:layout_constraintRight_toRightOf=\"parent\"\r\n        />\r\n\r\n\r\n\r\n\r\n\r\n</androidx.constraintlayout.widget.ConstraintLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_testing.xml	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
++++ app/src/main/res/layout/activity_testing.xml	(date 1625242751640)
+@@ -214,21 +214,21 @@
+         app:layout_constraintRight_toRightOf="parent"
+         app:layout_constraintTop_toBottomOf="@id/switch_config"
+         />
++
+     <Spinner
+         android:id="@+id/select_sector"
+         android:layout_width="120dp"
+         android:layout_height="40dp"
+-        android:hint = "@string/sector"
+-        android:textSize = "18sp"
+-        android:gravity="center"
+-        android:textAlignment="center"
++        android:layout_marginTop="10dp"
+         android:background="@android:drawable/btn_dropdown"
++        android:gravity="center"
++        android:hint="@string/sector"
+         android:spinnerMode="dropdown"
+-        android:layout_marginTop="10dp"
++        android:textAlignment="center"
++        android:textSize="18sp"
+         app:layout_constraintLeft_toLeftOf="parent"
+-        app:layout_constraintTop_toBottomOf="@id/cur_sector"
+         app:layout_constraintRight_toLeftOf="@id/ok_sector"
+-        />
++        app:layout_constraintTop_toBottomOf="@id/cur_sector" />
+     <Button
+         android:id = "@+id/ok_sector"
+         android:layout_width="50dp"
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM_[Default_Changelist]/shelved.patch
+===================================================================
+--- .idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM_[Default_Changelist]/shelved.patch	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
++++ .idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM_[Default_Changelist]/shelved.patch	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
+@@ -1,122 +0,0 @@
+-Index: app/src/main/java/com/example/radiocoveragetesting/sshActivity.java
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+-<+>package com.example.radiocoveragetesting;\r\n\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.os.Bundle;\r\nimport android.widget.TextView;\r\n\r\nimport androidx.appcompat.app.AppCompatActivity;\r\n\r\nimport org.apache.sshd.client.SshClient;\r\nimport org.apache.sshd.client.channel.ClientChannel;\r\nimport org.apache.sshd.client.channel.ClientChannelEvent;\r\nimport org.apache.sshd.client.session.ClientSession;\r\nimport org.apache.sshd.common.channel.Channel;\r\nimport org.apache.sshd.server.forward.AcceptAllForwardingFilter;\r\n\r\nimport java.io.ByteArrayOutputStream;\r\nimport java.io.IOException;\r\nimport java.io.OutputStream;\r\nimport java.util.EnumSet;\r\nimport java.util.concurrent.TimeUnit;\r\n\r\npublic class sshActivity extends AppCompatActivity {\r\n\r\n    ClientChannel channel;\r\n    TextView shellOutput;\r\n    String host, username, password;\r\n    Integer port;\r\n    String command;\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_ssh);\r\n\r\n        // set output field\r\n        shellOutput = findViewById(R.id.textView);\r\n\r\n        // Get user credentials from indent\r\n        Intent intent = getIntent();\r\n        host = intent.getStringExtra(\"host\");\r\n        port = Integer.parseInt(intent.getStringExtra(\"port\"));\r\n        username = intent.getStringExtra(\"username\");\r\n        password = intent.getStringExtra(\"password\");\r\n\r\n        // Command which will be executed\r\n        command = \"pwd\\n\";\r\n\r\n        // Setting user.com property manually \r\n        // since isn't set by default in android\r\n        String key = \"user.home\";\r\n        Context Syscontext;\r\n        Syscontext = getApplicationContext();\r\n        String val = Syscontext.getApplicationInfo().dataDir;\r\n        System.setProperty(key, val);\r\n\r\n        // Creating a client instance\r\n        final SshClient client = SshClient.setUpDefaultClient();\r\n        client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);\r\n        client.start();\r\n\r\n        // Starting new thread because network processes \r\n        // can interfere with UI if started in main thread\r\n        Thread thread = new Thread(new Runnable() {\r\n            @Override\r\n            public void run() {\r\n                try {\r\n                    // Connection establishment and authentication\r\n                    try (ClientSession session = client.connect(username, host, port).verify(10000).getSession()) {\r\n                        session.addPasswordIdentity(password);\r\n                        session.auth().verify(50000);\r\n                        System.out.println(\"Connection establihed\");\r\n\r\n                        // Create a channel to communicate\r\n                        channel = session.createChannel(Channel.CHANNEL_SHELL);\r\n                        System.out.println(\"Starting shell\");\r\n\r\n                        ByteArrayOutputStream responseStream = new ByteArrayOutputStream();\r\n                        channel.setOut(responseStream);\r\n\r\n                        // Open channel\r\n                        channel.open().verify(5, TimeUnit.SECONDS);\r\n                        try (OutputStream pipedIn = channel.getInvertedIn()) {\r\n                            pipedIn.write(command.getBytes());\r\n                            pipedIn.flush();\r\n                        }\r\n\r\n                        // Close channel\r\n                        channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED),\r\n                                TimeUnit.SECONDS.toMillis(5));\r\n\r\n                        // Output after converting to string type\r\n                        String responseString = new String(responseStream.toByteArray());\r\n                        System.out.println(responseString);\r\n                        shellOutput.setText(responseString);\r\n\r\n                    } catch (IOException e) {\r\n                        e.printStackTrace();\r\n                    } finally {\r\n                        client.stop();\r\n                    }\r\n                } catch (Exception e) {\r\n                    e.printStackTrace();\r\n                }\r\n            }\r\n        });\r\n        thread.start();\r\n    }\r\n}
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>UTF-8
+-===================================================================
+---- app/src/main/java/com/example/radiocoveragetesting/sshActivity.java	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
+-+++ app/src/main/java/com/example/radiocoveragetesting/sshActivity.java	(date 1624893864780)
+-@@ -20,6 +20,7 @@
+- import java.util.EnumSet;
+- import java.util.concurrent.TimeUnit;
+- 
+-+
+- public class sshActivity extends AppCompatActivity {
+- 
+-     ClientChannel channel;
+-@@ -36,7 +37,7 @@
+-         // set output field
+-         shellOutput = findViewById(R.id.textView);
+- 
+--        // Get user credentials from indent
+-+        // Get user credentials from intent
+-         Intent intent = getIntent();
+-         host = intent.getStringExtra("host");
+-         port = Integer.parseInt(intent.getStringExtra("port"));
+-Index: app/build.gradle
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+-<+>apply plugin: 'com.android.application'\r\n\r\nandroid {\r\n    compileSdkVersion 29\r\n    buildToolsVersion \"29.0.3\"\r\n\r\n    defaultConfig {\r\n        applicationId \"com.example.radiocoveragetesting\"\r\n        minSdkVersion 22\r\n        targetSdkVersion 29\r\n        versionCode 1\r\n        versionName \"1.0\"\r\n\r\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            minifyEnabled false\r\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\r\n        }\r\n    }\r\n\r\n}\r\n\r\ndependencies {\r\n    implementation fileTree(dir: 'libs', include: ['*.jar'])\r\n\r\n    implementation 'androidx.appcompat:appcompat:1.1.0'\r\n    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'\r\n    implementation 'org.apache.mina:mina-core:3.0.0-M2'\r\n    implementation 'org.apache.sshd:sshd-core:2.1.0'\r\n    implementation 'org.apache.sshd:sshd-putty:2.1.0'\r\n    implementation 'org.apache.sshd:sshd-common:2.1.0'\r\n    implementation 'org.slf4j:slf4j-api:1.7.5'\r\n    implementation 'org.slf4j:slf4j-simple:1.6.4'\r\n    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'\r\n    testImplementation 'junit:junit:4.12'\r\n    androidTestImplementation 'androidx.test.ext:junit:1.1.1'\r\n    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'\r\n\r\n}\r\n
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>UTF-8
+-===================================================================
+---- app/build.gradle	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
+-+++ app/build.gradle	(date 1624893332114)
+-@@ -21,7 +21,13 @@
+-         }
+-     }
+- 
+-+    packagingOptions {
+-+        exclude 'META-INF/DEPENDENCIES'
+-+    }
+-+
+- }
+-+
+-+
+- 
+- dependencies {
+-     implementation fileTree(dir: 'libs', include: ['*.jar'])
+-Index: build.gradle
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+-<+>// Top-level build file where you can add configuration options common to all sub-projects/modules.\r\n\r\nbuildscript {\r\n    \r\n    repositories {\r\n        google()\r\n        jcenter()\r\n        \r\n    }\r\n    dependencies {\r\n        classpath 'com.android.tools.build:gradle:3.6.3'\r\n        \r\n\r\n        // NOTE: Do not place your application dependencies here; they belong\r\n        // in the individual module build.gradle files\r\n    }\r\n}\r\n\r\nallprojects {\r\n    repositories {\r\n        google()\r\n        jcenter()\r\n        \r\n    }\r\n}\r\n\r\ntask clean(type: Delete) {\r\n    delete rootProject.buildDir\r\n}\r\n
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>UTF-8
+-===================================================================
+---- build.gradle	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
+-+++ build.gradle	(date 1624893136543)
+-@@ -8,7 +8,7 @@
+-         
+-     }
+-     dependencies {
+--        classpath 'com.android.tools.build:gradle:3.6.3'
+-+        classpath 'com.android.tools.build:gradle:4.2.1'
+-         
+- 
+-         // NOTE: Do not place your application dependencies here; they belong
+-@@ -27,3 +27,5 @@
+- task clean(type: Delete) {
+-     delete rootProject.buildDir
+- }
+-+
+-+
+-Index: .idea/jarRepositories.xml
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>UTF-8
+-===================================================================
+---- .idea/jarRepositories.xml	(date 1624645705272)
+-+++ .idea/jarRepositories.xml	(date 1624645705272)
+-@@ -0,0 +1,25 @@
+-+<?xml version="1.0" encoding="UTF-8"?>
+-+<project version="4">
+-+  <component name="RemoteRepositoriesConfiguration">
+-+    <remote-repository>
+-+      <option name="id" value="central" />
+-+      <option name="name" value="Maven Central repository" />
+-+      <option name="url" value="https://repo1.maven.org/maven2" />
+-+    </remote-repository>
+-+    <remote-repository>
+-+      <option name="id" value="jboss.community" />
+-+      <option name="name" value="JBoss Community repository" />
+-+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+-+    </remote-repository>
+-+    <remote-repository>
+-+      <option name="id" value="BintrayJCenter" />
+-+      <option name="name" value="BintrayJCenter" />
+-+      <option name="url" value="https://jcenter.bintray.com/" />
+-+    </remote-repository>
+-+    <remote-repository>
+-+      <option name="id" value="Google" />
+-+      <option name="name" value="Google" />
+-+      <option name="url" value="https://dl.google.com/dl/android/maven2/" />
+-+    </remote-repository>
+-+  </component>
+-+</project>
+-\ No newline at end of file
+-Index: gradle/wrapper/gradle-wrapper.properties
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+-<+>#Thu Jun 17 14:26:25 EDT 2021\r\ndistributionBase=GRADLE_USER_HOME\r\ndistributionPath=wrapper/dists\r\nzipStoreBase=GRADLE_USER_HOME\r\nzipStorePath=wrapper/dists\r\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-5.6.4-all.zip\r\n
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>windows-1252
+-===================================================================
+---- gradle/wrapper/gradle-wrapper.properties	(revision 499477bad2bf99de5d0a972dedf30c9831685609)
+-+++ gradle/wrapper/gradle-wrapper.properties	(date 1624645656633)
+-@@ -3,4 +3,4 @@
+- distributionPath=wrapper/dists
+- zipStoreBase=GRADLE_USER_HOME
+- zipStorePath=wrapper/dists
+--distributionUrl=https\://services.gradle.org/distributions/gradle-5.6.4-all.zip
+-+distributionUrl=https\://services.gradle.org/distributions/gradle-6.7.1-all.zip
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM__Default_Changelist_.xml
+===================================================================
+--- .idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM__Default_Changelist_.xml	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
++++ .idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM__Default_Changelist_.xml	(revision 70be5bb728ce3ca25d45903d222be7dc4ddebdc8)
+@@ -1,4 +0,0 @@
+-<changelist name="Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM_[Default_Changelist]" date="1624901636908" recycled="true" deleted="true">
+-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_6_28_2021_1_33_PM_[Default_Changelist]/shelved.patch" />
+-  <option name="DESCRIPTION" value="Uncommitted changes before Update at 6/28/2021 1:33 PM [Default Changelist]" />
+-</changelist>
+\ No newline at end of file

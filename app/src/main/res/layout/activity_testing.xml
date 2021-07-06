@@ -214,21 +214,21 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/switch_config"
         />
+
     <Spinner
         android:id="@+id/select_sector"
         android:layout_width="120dp"
         android:layout_height="40dp"
-        android:hint = "@string/sector"
-        android:textSize = "18sp"
-        android:gravity="center"
-        android:textAlignment="center"
-        android:background="@android:drawable/btn_dropdown"
-        android:spinnerMode="dropdown"
         android:layout_marginTop="10dp"
+        android:background="@android:drawable/btn_dropdown"
+        android:gravity="center"
+        android:hint="@string/sector"
+        android:spinnerMode="dropdown"
+        android:textAlignment="center"
+        android:textSize="18sp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cur_sector"
         app:layout_constraintRight_toLeftOf="@id/ok_sector"
-        />
+        app:layout_constraintTop_toBottomOf="@id/cur_sector" />
     <Button
         android:id = "@+id/ok_sector"
         android:layout_width="50dp"

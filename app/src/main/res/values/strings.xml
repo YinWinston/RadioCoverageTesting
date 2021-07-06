@@ -28,4 +28,32 @@
     <string name = "caci_image_desc">CACI Logo</string>
     <string name = "enter_login_info"><b>Enter Login Information Below</b></string>
     <string name = "test_button"><b>Test</b></string>
+    <string-array name="Base_station_list">
+        <item>DEA DO</item>
+        <item>Edinberg</item>
+        <item>Mission TX</item>
+        <item>Weslaco</item>
+    </string-array>
+    <string-array name="DEA_DO_sector_list">
+        <item>DEA_NW</item>
+        <item>DEA_NE</item>
+        <item>DEA_SE</item>
+        <item>DEA_SW</item>
+    </string-array>
+    <string-array name="Edinberg_sector_list">
+        <item>Edinberg_W</item>
+        <item>Edinberg_E</item>
+        <item>Edinberg_S</item>
+    </string-array>
+    <string-array name="Mission_sector_list">
+        <item>Mission_W</item>
+        <item>Mission_N</item>
+        <item>Mission_E</item>
+    </string-array>
+    <string-array name="Weslaco_sector_list">
+        <item>Weslaco_NW</item>
+        <item>Weslaco_NE</item>
+        <item>Weslaco_SE</item>
+        <item>Weslaco_SW</item>
+    </string-array>
 </resources>

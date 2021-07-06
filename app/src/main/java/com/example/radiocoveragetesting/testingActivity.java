@@ -9,7 +9,11 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.SshException;
 import org.apache.sshd.common.channel.Channel;
 import org.apache.sshd.common.channel.exception.SshChannelOpenException;
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
@@ -27,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class testingActivity extends AppCompatActivity {
+public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     TextView snrUp;
     TextView snrDown;
@@ -50,6 +55,7 @@ public class testingActivity extends AppCompatActivity {
     Handler mainHandler;
     HandlerThread thread;
     ByteArrayOutputStream errStream;
+    Spinner spinnerBaseStation, spinnerSector;
     private boolean justStarted;
 
 
@@ -58,6 +64,16 @@ public class testingActivity extends AppCompatActivity {
         Log.d("test", "the testingActivity works");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_testing);
+
+        spinnerBaseStation = findViewById(R.id.select_sector);
+        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
+        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerBaseStation.setAdapter(adapter1);
+        spinnerBaseStation.setOnItemSelectedListener(this);
+
+        spinnerSector = findViewById(R.id.select_tower);
+
+
 
         Intent intent = getIntent();
 
@@ -254,8 +270,9 @@ public class testingActivity extends AppCompatActivity {
         }
         catch (Exception e) {
             System.out.println("error in opening channel or getting response at fetchStat()");
-            if(e instanceof SshChannelOpenException && Objects.requireNonNull(e.getMessage()).trim().equals(
-                    "open failed")) {
+            if((e instanceof SshChannelOpenException || e instanceof SshException) && (Objects.requireNonNull(e.getMessage()).trim().equals(
+                    "open failed") || Objects.requireNonNull(e.getMessage()).trim().equals(
+                    "Session has been closed"))) {
                 sshChannel.close(true);
                 sshSession.close(true);
                 try {
@@ -313,5 +330,48 @@ public class testingActivity extends AppCompatActivity {
         super.onDestroy();
         sshHandler.removeCallbacksAndMessages(null);
         sshHandler.getLooper().quit();
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+        Spinner spin = (Spinner) adapterView;
+        String[] baseStationList = getResources().getStringArray(R.array.Base_station_list);
+        int sectorListId;
+        if(spin.getId() == R.id.select_sector)
+        {
+            String selectedBaseStation = adapterView.getItemAtPosition(position).toString();
+            switch (selectedBaseStation) {
+                case "DEA DO":
+                    sectorListId = R.array.DEA_DO_sector_list;
+                    break;
+                case "Edinberg":
+                    sectorListId = R.array.Edinberg_sector_list;
+                    break;
+                case "Mission":
+                    sectorListId = R.array.Mission_sector_list;
+                    break;
+                case "Wesclaco":
+                    sectorListId = R.array.Weslaco_sector_list;
+                    break;
+                default:
+                    sectorListId = R.array.DEA_DO_sector_list; //merely a default. Should never happen
+                    System.out.println("problem processing base selection in onItemSelection()");
+            }
+
+            ArrayAdapter<CharSequence>adapter2 = ArrayAdapter.createFromResource(this, sectorListId, android.R.layout.simple_spinner_item);
+            adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerSector.setAdapter(adapter2);
+            spinnerSector.setOnItemSelectedListener(this);
+
+        }
+        else if(spin.getId() == R.id.select_tower)
+        {
+            //should we add confirmation button to confirm sending switch command or make it switch right away?
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
     }
 }
