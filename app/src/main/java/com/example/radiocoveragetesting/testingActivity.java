@@ -56,6 +56,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     HandlerThread thread;
     ByteArrayOutputStream errStream;
     Spinner spinnerBaseStation, spinnerSector;
+    Boolean retryFetchStat;
+    Boolean updateEnabled;
     private boolean justStarted;
 
 
@@ -64,6 +66,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         Log.d("test", "the testingActivity works");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_testing);
+        retryFetchStat = true;
 
         spinnerBaseStation = findViewById(R.id.select_sector);
         ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
@@ -103,7 +106,37 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         String val = sysContext.getApplicationInfo().dataDir;
         System.setProperty(key, val);
 
+        // Creating a client instance
+        client = SshClient.setUpDefaultClient();
+        client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
+        client.start();
 
+        //mainHandler allows a background thread to access main thread and update ui
+        //mainHandler = new Handler();
+
+        thread = new HandlerThread("MyHandlerThread");
+        thread.start();
+        //sshHandler allows main thread to post runnable to background thread
+        sshHandler = new Handler(thread.getLooper());
+
+        //make a runnable to establish ssh session in background
+        establishSsh = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    establishSshSession();
+                }
+                catch (Exception e) {
+                    System.out.println("issue 1");
+                    e.printStackTrace();
+                }
+            }
+        };
+        mainHandler = new Handler(Looper.getMainLooper());
+
+
+        //activate the said runnable in background
+        sshHandler.post(establishSsh);
 
         //Setting onClick Listener for Start/Stop Button
         startStop.setOnClickListener(new View.OnClickListener() {
@@ -115,40 +148,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     startStop.setText("Stop");
                     startStop.setBackgroundColor(Color.RED);
 
-                    // Creating a client instance
-                    client = SshClient.setUpDefaultClient();
-                    client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
-                    client.start();
-                    //mainHandler allows a background thread to access main thread and update ui
-                    //mainHandler = new Handler();
+                    updateEnabled = true;
 
-
-
-                    thread = new HandlerThread("MyHandlerThread");
-                    thread.start();
-                    //sshHandler allows main thread to post runnable to background thread
-                    sshHandler = new Handler(thread.getLooper());
-
-                    //make a runnable to establish ssh session in background
-                    establishSsh = new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                establishSshSession();
-                            }
-                            catch (Exception e) {
-                                System.out.println("issue 1");
-                                e.printStackTrace();
-                            }
-                        }
-                    };
-
-                    //activate the said runnable in background
-                    sshHandler.post(establishSsh);
 
                     System.out.println("ssh established");
-                    mainHandler = new Handler(Looper.getMainLooper());
-
                     //create another runnable, for updates
                     updater = new Runnable() {
                         @Override
@@ -164,7 +167,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                             };
 
                             mainHandler.post(myRunnable);
-                            sshHandler.postDelayed(updater,1000);
+                            //sshHandler.postDelayed(updater,1000); //updateStat() does this now
                         }
                     };
                     System.out.println("start update");
@@ -174,23 +177,29 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     // Changes State of Button
                     startStop.setText("Start");
                     startStop.setBackgroundColor(Color.GREEN);
+                    updateEnabled = false;
+                    /*
                     try {
                         sshHandler.removeCallbacks(updater);
-                        sshHandler.removeCallbacks(establishSsh);
-                        client.close();
-                        thread.interrupt();
+                        //sshHandler.removeCallbacks(establishSsh);
+                        //client.close();
+                        //thread.interrupt();
                         System.out.println("Successfully Closed");
                     }
+
+
                     catch(Exception e) {
                         System.out.println("Either failed to close client or client did not exist");
                     }
+                    */
+
                 }
             }
         });
     }
 
     /**
-     * Updates stat TextViews
+     * Updates stat TextViews and also determines if update should continue
      * Make sure to post it to mainHandler if using it in background
      * @param stat ArrayList of stats
      */
@@ -208,6 +217,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             avgPwrDown.setText(stat.get(5));
             peakPwrUp.setText(stat.get(6));
             peakPwrDown.setText(stat.get(7));
+        }
+
+        if (updateEnabled){
+            sshHandler.postDelayed(updater,1000);
         }
 
     }
@@ -267,6 +280,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 ans.add(answerArray[11]); //peakPwrDown
             }
             justStarted = false;
+            retryFetchStat = true;
         }
         catch (Exception e) {
             System.out.println("error in opening channel or getting response at fetchStat()");
@@ -288,7 +302,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     e2.printStackTrace();
                 }
                 establishSshSession();
-                fetchStats();
+                if (retryFetchStat) {
+                    retryFetchStat = false;
+                    fetchStats();
+                }
 
             }
             System.out.println("stacktrace for why first attempt failed");
