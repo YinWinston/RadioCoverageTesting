@@ -9,12 +9,12 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
-import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -45,8 +44,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     TextView avgPwrDown;
     TextView peakPwrUp;
     TextView peakPwrDown;
+    TextView currentSector;
     Button startStop;
     Button export;
+    Button confirmSwitch;
     String host, username, password;
     Integer port;
     Handler sshHandler;
@@ -59,19 +60,24 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     HandlerThread thread;
     ByteArrayOutputStream errStream;
     Spinner spinnerBaseStation, spinnerSector;
-    Boolean retryFetchStat;
+    Boolean retryFetchStat, retrySwitchSector;
     Boolean updateEnabled;
+    String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
+    private final Context thisContext = this;
     private boolean justStarted;
 
 
-
+    /**
+     * Automatically used on creation
+     * @param savedInstanceState record of what state the app was in previously
+     */
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("test", "the testingActivity works");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_testing);
         retryFetchStat = true;
-
+        retrySwitchSector = true;
         spinnerBaseStation = findViewById(R.id.select_sector);
         ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -94,6 +100,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         peakPwrDown = findViewById(R.id.peak_PWR_down);
         startStop = findViewById(R.id.start_stop);
         export = findViewById(R.id.export);
+        currentSector = findViewById(R.id.cur_sector);
+        confirmSwitch = findViewById(R.id.confirm_sector);
 
         //get login cred from intent
         host = intent.getStringExtra("host");
@@ -141,6 +149,16 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //activate the said runnable in background
         sshHandler.post(establishSsh);
+
+        confirmSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                switchSector();
+                retrySwitchSector = true;
+            }
+        });
+
+
 
         //Setting onClick Listener for Start/Stop Button
         startStop.setOnClickListener(new View.OnClickListener() {
@@ -336,7 +354,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     e2.printStackTrace();
                 }
                 establishSshSession();
-                if (retryFetchStat) {
+                if (retryFetchStat) {  //checks that this is not the 2nd time in a row error has happened
                     retryFetchStat = false;
                     fetchStats();
                 }
@@ -376,6 +394,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         }
     }
 
+    /**
+     * Automatically called when the app is to be closed
+     * Need to end the network thread or else it will consume resources after app's death
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -383,10 +405,17 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         sshHandler.getLooper().quit();
     }
 
+    /**
+     * Determines what action to take when user chooses something on spinner
+     * @param adapterView the spinner
+     * @param view I think context?
+     * @param position the location in terms of array
+     * @param l no idea
+     */
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
         Spinner spin = (Spinner) adapterView;
-        String[] baseStationList = getResources().getStringArray(R.array.Base_station_list);
+        //String[] baseStationList = getResources().getStringArray(R.array.Base_station_list);
         int sectorListId;
         if(spin.getId() == R.id.select_sector)
         {
@@ -398,10 +427,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 case "Edinberg":
                     sectorListId = R.array.Edinberg_sector_list;
                     break;
-                case "Mission":
+                case "Mission TX":
                     sectorListId = R.array.Mission_sector_list;
                     break;
-                case "Wesclaco":
+                case "Weslaco":
                     sectorListId = R.array.Weslaco_sector_list;
                     break;
                 default:
@@ -417,12 +446,157 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         }
         else if(spin.getId() == R.id.select_tower)
         {
-            //should we add confirmation button to confirm sending switch command or make it switch right away?
+            selectedSector =  adapterView.getItemAtPosition(position).toString();
         }
     }
 
+    /**
+     * runs when a view selects nothing
+     * @param adapterView the view that selected nothing
+     */
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
 
+    }
+
+    /**
+     * Runs when you hit the confirm sector switch button, commands pi to change config file
+     */
+    public void switchSector() {
+        String commandArg;
+        //TODO: find out what the arguments for switch command should be for each sector
+        switch (selectedSector) {
+            case "DEA_NW":
+                commandArg = "placeholder";
+                break;
+            case "DEA_NE":
+                commandArg = "";
+                break;
+            case "DEA_SE":
+                commandArg = "";
+                break;
+            case "DEA_SW":
+                commandArg = "";
+                break;
+            case "Edinberg_W":
+                commandArg = "";
+                break;
+            case "Edinberg_E":
+                commandArg = "";
+                break;
+            case "Edinberg_S":
+                commandArg = "";
+                break;
+            case "Mission_W":
+                commandArg = "";
+                break;
+            case "Mission_N":
+                commandArg = "";
+                break;
+            case "Mission_E":
+                commandArg = "";
+                break;
+            case "Weslaco_NW":
+                commandArg = "";
+                break;
+            case "Weslaco_NE":
+                commandArg = "";
+                break;
+            case "Weslaco_SE":
+                commandArg = "";
+                break;
+            case "Weslaco_SW":
+                commandArg = "";
+                break;
+            default:
+                commandArg = "";
+                System.out.println("This line should not run");
+        }
+
+        Runnable switchSector = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String command = "switch " + commandArg + "\n";
+
+                    // Open channel
+                    sshChannel.open().verify(5, TimeUnit.SECONDS);
+                    sshSession.resetIdleTimeout();
+
+                    try {
+                        OutputStream pipedIn = sshChannel.getInvertedIn();
+                        pipedIn.write(command.getBytes());
+                        System.out.println("sending command");
+                        pipedIn.flush();
+                        pipedIn.close();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    //TODO: when sending switch command, the output stream's new text can
+                    // mess up formatting for next update. Find a way around this
+
+                    retrySwitchSector = true;
+                    switchSectorSuccess(selectedSector);
+
+                    /*
+                    //You gotta capture the string rather than
+                    //scan it with scanner line-by-line because the stream constantly adds more
+                    String responseString = new String(responseStream.toByteArray());
+                    System.out.println("response string: \n" + responseString);
+                    //break down the string into lines
+                    String[] response = responseString.trim().split("\n");
+                    */
+
+                }
+                catch (Exception e) {
+                    System.out.println("error in opening channel or getting response at switchSector()");
+                    if((e instanceof SshChannelOpenException || e instanceof SshException) && (Objects.requireNonNull(e.getMessage()).trim().equals(
+                            "open failed") || Objects.requireNonNull(e.getMessage()).trim().equals(
+                            "Session has been closed"))) {
+                        sshChannel.close(true);
+                        sshSession.close(true);
+                        try {
+                            responseStream.close();
+                        }
+                        catch (IOException e2) {
+                            e2.printStackTrace();
+                        }
+                        try {
+                            errStream.close();
+                        }
+                        catch (IOException e2) {
+                            e2.printStackTrace();
+                        }
+                        establishSshSession();
+                        if (retrySwitchSector) {  //checks that this is not the 2nd time in a row error has happened
+                            retrySwitchSector = false;
+                            switchSector();
+                        }
+
+                    }
+                    System.out.println("stacktrace for why first attempt failed");
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        sshHandler.post(switchSector);
+    }
+
+    /**
+     * Used to make UI reflect successful sector switch
+     * @param newSectorName name of the sector you are switching to
+     */
+    public void switchSectorSuccess(String newSectorName) {
+        Runnable updateSector = new Runnable() {
+            @Override
+            public void run() {
+                currentSector.setText("Current sector: " + newSectorName);
+                Toast toast = Toast.makeText(thisContext, "Sector changed", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        };
+        mainHandler.post(updateSector);
     }
 }
