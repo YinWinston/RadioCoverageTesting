@@ -29,6 +29,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -58,6 +61,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     Spinner spinnerBaseStation, spinnerSector;
     Boolean retryFetchStat;
     Boolean updateEnabled;
+    Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
     private boolean justStarted;
 
 
@@ -204,19 +208,26 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * @param stat ArrayList of stats
      */
     private void updateStat(ArrayList<String> stat) {
-
+        //TODO: need to make sure the titles are included and formatting is done correctly
         System.out.println("updateStat() running");
 
         if (stat.size() > 7) {
 
-            snrUp.setText(stat.get(0));
-            snrDown.setText(stat.get(1));
-            peakSnrUp.setText(stat.get(2));
-            peakSnrDown.setText(stat.get(3));
-            avgPwrUp.setText(stat.get(4));
-            avgPwrDown.setText(stat.get(5));
-            peakPwrUp.setText(stat.get(6));
-            peakPwrDown.setText(stat.get(7));
+            snrUp.setText("SNR Up \n" + stat.get(0)); //good
+            snrDown.setText("SNR Down \n" + stat.get(1)); //good
+
+            if(Double.parseDouble(stat.get(0)) > highest_snr_up) {
+                highest_snr_up = Double.parseDouble(stat.get(0));
+            }
+            if(Double.parseDouble(stat.get(1)) > highest_snr_down) {
+                highest_snr_down = Double.parseDouble(stat.get(1));
+            }
+            peakSnrUp.setText("Peak SNR Up \n" + String.format(Locale.getDefault(), "%f", highest_snr_up));
+            peakSnrDown.setText("Peak SNR Down \n" + String.format(Locale.getDefault(), "%f", highest_snr_down));
+            avgPwrUp.setText("AVG PWR Up \n" + stat.get(4));
+            avgPwrDown.setText("AVG PWR Down \n" + stat.get(5));
+            peakPwrUp.setText("Peak PWR Up \n" + stat.get(6) + " (" + stat.get(7) + ")");
+            peakPwrDown.setText("Peak PWR Down \n" +stat.get(8) + " (" + stat.get(9) + ")");
         }
 
         if (updateEnabled){
@@ -268,16 +279,39 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 System.out.println("Testing line: " + answerLine);//show it to log to manually check
                 //formatting the string
                 String[] answerArray = answerLine.split(",");
-
+                System.out.println("Post-process: " +   Arrays.toString(answerArray));
                 //I just did response 4-11 because I don't know the actual format of stats
-                ans.add(answerArray[4]);  //snrUp
-                ans.add(answerArray[5]);  //snrDown
-                ans.add(answerArray[6]);  //peakSnrUp
-                ans.add(answerArray[7]);  //peakSnrDown
-                ans.add(answerArray[8]);  //avgPwrUp
-                ans.add(answerArray[9]);  //avgPwrDown
-                ans.add(answerArray[10]); //peakPwrUp
-                ans.add(answerArray[11]); //peakPwrDown
+                double[] pwr_downs = new double[]{Double.parseDouble(answerArray[6]),
+                        Double.parseDouble(answerArray[7]),Double.parseDouble(answerArray[8]),
+                        Double.parseDouble(answerArray[9])};
+                double[] pwr_ups = new double[]{Double.parseDouble(answerArray[21]),
+                        Double.parseDouble(answerArray[22]),Double.parseDouble(answerArray[23]),
+                        Double.parseDouble(answerArray[24])};
+                double avg_p_downs = (pwr_downs[0] + pwr_downs[1] + pwr_downs[2]+ pwr_downs[3])/4.0;
+                double avg_p_ups = (pwr_ups[0] + pwr_ups[1] + pwr_ups[2]+ pwr_ups[3])/4.0;
+                double peak_p_down = 10000; double peak_p_up = -10000;
+                String p_sector_down = "A"; String p_sector_up = "A";
+                String[] sector_conv = new String[]{"A", "B", "C", "D"};
+                for(int i = 0; i < 4; i++) {
+                    if(pwr_downs[i] < peak_p_down) {
+                        peak_p_down = pwr_downs[i];
+                        p_sector_down = sector_conv[i];
+                    }
+                    if(pwr_ups[i] > peak_p_up) {
+                        peak_p_up = pwr_ups[i];
+                        p_sector_up = sector_conv[i];
+                    }
+                }
+                ans.add(answerArray[20]);  //snrUp-good
+                ans.add(answerArray[5]);  //snrDown-good
+                ans.add(answerArray[20]);  //peakSnrUp-good
+                ans.add(answerArray[5]);  //peakSnrDown-good
+                ans.add(Double.toString(avg_p_ups));  //avgPwrUp-good
+                ans.add(Double.toString(avg_p_downs));  //avgPwrDown-good
+                ans.add(Double.toString(peak_p_up)); //peakPwrUp
+                ans.add(p_sector_up); //peakPwrUp Sector
+                ans.add(Double.toString(peak_p_down)); //peakPwrDown
+                ans.add(p_sector_down); //peakPwrDown Sector
             }
             justStarted = false;
             retryFetchStat = true;
