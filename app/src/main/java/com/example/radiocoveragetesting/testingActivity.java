@@ -16,7 +16,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannel;
@@ -36,18 +43,9 @@ import java.util.concurrent.TimeUnit;
 
 public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    TextView snrUp;
-    TextView snrDown;
-    TextView peakSnrUp;
-    TextView peakSnrDown;
-    TextView avgPwrUp;
-    TextView avgPwrDown;
-    TextView peakPwrUp;
-    TextView peakPwrDown;
-    TextView currentSector;
-    Button startStop;
-    Button export;
-    Button confirmSwitch;
+    TextView snrUp, snrDown, peakSnrUp, peakSnrDown, avgPwrUp, avgPwrDown, peakPwrUp;
+    TextView peakPwrDown, currentSector;
+    Button startStop, export, confirmSwitch;
     String host, username, password;
     Integer port;
     Handler sshHandler;
@@ -64,6 +62,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     Boolean updateEnabled;
     String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
+    ArrayList<String> coverageDatas = new ArrayList<String>();
+
+    CoverageData cur_coverage;
+    FirebaseDatabase firebaseDatabase;
+    DatabaseReference databaseReference;
+
     private final Context thisContext = this;
     private boolean justStarted;
 
@@ -87,7 +91,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         spinnerSector = findViewById(R.id.select_tower);
 
 
-
         Intent intent = getIntent();
 
         snrUp = findViewById(R.id.SNR_Up);
@@ -108,6 +111,24 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         port = Integer.parseInt(intent.getStringExtra("port"));
         username = intent.getStringExtra("username");
         password = intent.getStringExtra("password");
+
+        export.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Crashes if you're connected to the Drive-5 Wifi, gotta connect to a diff one
+                /*Method doesn't work properly right now for some reason. Code seems to run w/o
+                error but the database doesn't update. Don't know how to fix this. */
+                //TODO: Use try catch statements here
+                System.out.println("Database Upload");
+                firebaseDatabase = FirebaseDatabase.getInstance();
+                databaseReference = firebaseDatabase.getReference("CoverageData").push();
+                for(int i = 0; i < coverageDatas.size(); i++){
+                    cur_coverage = new CoverageData();
+                    System.out.println(coverageDatas.get(i));
+                    addDatatoFirebase(coverageDatas.get(i));
+                }
+            }
+        });
 
         //I don't get what this does, but the code breaks without it
         // Setting user.com property manually
@@ -149,7 +170,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //activate the said runnable in background
         sshHandler.post(establishSsh);
-
         confirmSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
@@ -285,6 +305,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             //You gotta capture the string rather than
             //scan it with scanner line-by-line because the stream constantly adds more
             String responseString = new String(responseStream.toByteArray());
+
             System.out.println("response string: \n" + responseString);
             //break down the string into lines
             String[] response = responseString.trim().split("\n");
@@ -294,6 +315,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             if(!justStarted) {
                 //find the line containing the info we want
                 String answerLine = response[response.length - 2];
+                coverageDatas.add(answerLine);
                 System.out.println("Testing line: " + answerLine);//show it to log to manually check
                 //formatting the string
                 String[] answerArray = answerLine.split(",");
@@ -598,5 +620,32 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
         };
         mainHandler.post(updateSector);
+    }
+    //TODO: Change to parse all of the different statistics independently
+    private void addDatatoFirebase(String wholeString) {
+        // below are the lines of code is used to set the data in our object class.
+        cur_coverage.setWholeString(wholeString);
+        databaseReference.child("CoverageData").setValue(cur_coverage);
+        // we are use add value event listener method
+        // which is called with database reference.
+//        databaseReference.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                // inside the method of on Data change we are setting
+//                // our object class to our database reference.
+//                // data base reference will sends data to firebase.
+//
+//
+//                // after adding this data we are showing toast message.
+////                Toast.makeText(MainActivity.this, "data added", Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError error) {
+//                // if the data is not added or it is cancelled then
+//                // we are displaying a failure toast message.
+////                Toast.makeText(MainActivity.this, "Fail to add data " + error, Toast.LENGTH_SHORT).show();
+//            }
+//        });
     }
 }
