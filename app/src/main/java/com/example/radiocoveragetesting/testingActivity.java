@@ -27,18 +27,23 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannel;
+import org.apache.sshd.client.scp.ScpClient;
+import org.apache.sshd.client.scp.ScpClientCreator;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.SshException;
 import org.apache.sshd.common.channel.Channel;
 import org.apache.sshd.common.channel.exception.SshChannelOpenException;
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -60,9 +65,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     Spinner spinnerBaseStation, spinnerSector;
     Boolean retryFetchStat, retrySwitchSector;
     Boolean updateEnabled;
+    Boolean isLoginAttempt;
     String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
-    ArrayList<String> coverageDatas = new ArrayList<String>();
+    ArrayList<String> coverageDatas = new ArrayList<>();
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -82,6 +88,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         setContentView(R.layout.activity_testing);
         retryFetchStat = true;
         retrySwitchSector = true;
+        isLoginAttempt = true;
         spinnerBaseStation = findViewById(R.id.select_sector);
         ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -125,7 +132,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 for(int i = 0; i < coverageDatas.size(); i++){
                     cur_coverage = new CoverageData();
                     System.out.println(coverageDatas.get(i));
-                    addDatatoFirebase(coverageDatas.get(i));
+                    addDataToFirebase(coverageDatas.get(i));
                 }
             }
         });
@@ -397,9 +404,14 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     private boolean establishSshSession(){
 
         try {
-            sshSession = client.connect(username, host, port).verify(10000).getSession();
+
+            sshSession = client.connect(username, host, port).verify(5000).getSession();
+
+
+
+
             sshSession.addPasswordIdentity(password);
-            sshSession.auth().verify(50000);
+            sshSession.auth().verify(5000);
             sshChannel = sshSession.createChannel(Channel.CHANNEL_SHELL);
             responseStream = new ByteArrayOutputStream();
             sshChannel.setOut(responseStream);
@@ -410,6 +422,29 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             return true;
         }
         catch (Exception e) {
+            if (isLoginAttempt){
+                isLoginAttempt = false;
+                Intent loginFailIntent = new Intent(this, MainActivity.class);
+                if (e instanceof UnresolvedAddressException){
+                    System.out.println("error with address");
+                    loginFailIntent.putExtra("reason", "Invalid address");
+                }
+                else if (e instanceof SshException && e.getMessage().contains("timeout")){
+                    System.out.println("timeout error");
+                    loginFailIntent.putExtra("reason", "No response from login server");
+                }
+                else if (e instanceof SshException && e.getMessage().contains("No more authentication methods available")){
+                    System.out.println("verification");
+                    loginFailIntent.putExtra("reason", "Wrong username or password");
+                }
+                else {
+                    System.out.println("unknown error during login attempt");
+                    loginFailIntent.putExtra("reason", "Unknown");
+                }
+                startActivity(loginFailIntent);
+
+            }
+
             System.out.println("failed to establish session");
             e.printStackTrace();
             return false;
@@ -556,7 +591,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                         e.printStackTrace();
                     }
                     //TODO: when sending switch command, the output stream's new text can
-                    // mess up formatting for next update. Find a way around this
+                    // mess up formatting for next stat display update. Find a way around this.
 
                     retrySwitchSector = true;
                     switchSectorSuccess(selectedSector);
@@ -622,10 +657,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         mainHandler.post(updateSector);
     }
     //TODO: Change to parse all of the different statistics independently
-    private void addDatatoFirebase(String wholeString) {
+    private void addDataToFirebase(String wholeString) {
         // below are the lines of code is used to set the data in our object class.
         cur_coverage.setWholeString(wholeString);
-        databaseReference.child("CoverageData").setValue(cur_coverage);
+        //databaseReference.child("CoverageData").setValue(cur_coverage);
         // we are use add value event listener method
         // which is called with database reference.
 //        databaseReference.addValueEventListener(new ValueEventListener() {
@@ -647,5 +682,61 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 ////                Toast.makeText(MainActivity.this, "Fail to add data " + error, Toast.LENGTH_SHORT).show();
 //            }
 //        });
+    }
+
+    /**
+     * Uses SCP to download base station config file
+     */
+    private void fetchConfig() {
+        //change the command to new command that fetches config file later
+        String command = "go\n";
+        System.out.println("fetchConfig() running)");
+        ArrayList<String> ans = new ArrayList<>();
+        try {
+
+            // Open channel
+            sshChannel.open().verify(5, TimeUnit.SECONDS);
+            sshSession.resetIdleTimeout();
+
+
+            //Example use of scp creator: https://stackoverflow.com/questions/62692515/how-to-upload-download-files-using-apache-sshd-scpclient
+
+
+            ScpClientCreator creator = ScpClientCreator.instance();
+            ScpClient scpClient = creator.createScpClient(sshSession);
+            //scpClient.download("/source"(remote), (local)Paths.get("C:\\Users\\u660221\\destination"), ScpClient.Option.Recursive, ScpClient.Option.PreserveAttributes, ScpClient.Option.TargetIsDirectory);
+            Scanner scanner = new Scanner(new File("address here"));
+
+            //TODO: make the scanner parse CSV file and make arrays for the ui element to use
+            //TODO: perhaps make a button to retry retrieving a config file
+
+        }
+        catch (Exception e) {
+            System.out.println("error in opening channel or getting response at fetchConfig()");
+            if((e instanceof SshChannelOpenException || e instanceof SshException) && (Objects.requireNonNull(e.getMessage()).trim().equals(
+                    "open failed") || Objects.requireNonNull(e.getMessage()).trim().equals(
+                    "Session has been closed"))) {
+                sshChannel.close(true);
+                sshSession.close(true);
+                try {
+                    responseStream.close();
+                }
+                catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+                try {
+                    errStream.close();
+                }
+                catch (IOException e2) {
+                    e2.printStackTrace();
+                }
+                establishSshSession();
+
+
+            }
+            System.out.println("stacktrace for fetchConfig() failing");
+            e.printStackTrace();
+        }
+
     }
 }

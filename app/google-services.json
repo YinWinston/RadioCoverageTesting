@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1097218833586",
+    "firebase_url": "https://radiocoveragetesting-default-rtdb.firebaseio.com",
+    "project_id": "radiocoveragetesting",
+    "storage_bucket": "radiocoveragetesting.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1097218833586:android:424577e9a4a06ab0d95dab",
+        "android_client_info": {
+          "package_name": "com.example.radiocoveragetesting"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1097218833586-3rvor7370vrj6fjjh235eif5huj6vmie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAugXiGuSgVhUJc7_aQYIgHcvKRwAeko-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1097218833586-3rvor7370vrj6fjjh235eif5huj6vmie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
