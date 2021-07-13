@@ -38,10 +38,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -64,11 +66,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     ByteArrayOutputStream errStream;
     Spinner spinnerBaseStation, spinnerSector;
     Boolean retryFetchStat, retrySwitchSector;
-    Boolean updateEnabled;
-    Boolean isLoginAttempt;
+    Boolean updateEnabled, isLoginAttempt, sectorsSet, firstRun;
     String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
     ArrayList<String> coverageDatas = new ArrayList<>();
+    Map<String, ArrayList<String>> config_order;
+    ArrayList<String> BaseStations;
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -83,6 +86,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * @param savedInstanceState record of what state the app was in previously
      */
     protected void onCreate(Bundle savedInstanceState) {
+        sectorsSet = false; firstRun = true;
         Log.d("test", "the testingActivity works");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_testing);
@@ -327,7 +331,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 //formatting the string
                 String[] answerArray = answerLine.split(",");
                 System.out.println("Post-process: " +   Arrays.toString(answerArray));
-                //I just did response 4-11 because I don't know the actual format of stats
                 double[] pwr_downs = new double[]{Double.parseDouble(answerArray[6]),
                         Double.parseDouble(answerArray[7]),Double.parseDouble(answerArray[8]),
                         Double.parseDouble(answerArray[9])};
@@ -419,6 +422,16 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             errStream = new ByteArrayOutputStream();
             sshChannel.setErr(errStream);
             justStarted = true;
+            //point where I originally ran the fetchConfig code
+//            if(!sectorsSet) {
+//                sectorsSet = true;
+//                try {
+//                    fetchConfig();
+//                }
+//                catch(Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
             return true;
         }
         catch (Exception e) {
@@ -689,9 +702,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      */
     private void fetchConfig() {
         //change the command to new command that fetches config file later
-        String command = "go\n";
+        String command = "cat bin/ConfigList.txt \n";
         System.out.println("fetchConfig() running)");
         ArrayList<String> ans = new ArrayList<>();
+        String responseString;
+        String[] response = new String[0];
         try {
 
             // Open channel
@@ -705,11 +720,19 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             ScpClientCreator creator = ScpClientCreator.instance();
             ScpClient scpClient = creator.createScpClient(sshSession);
             //scpClient.download("/source"(remote), (local)Paths.get("C:\\Users\\u660221\\destination"), ScpClient.Option.Recursive, ScpClient.Option.PreserveAttributes, ScpClient.Option.TargetIsDirectory);
-            Scanner scanner = new Scanner(new File("address here"));
-
             //TODO: make the scanner parse CSV file and make arrays for the ui element to use
             //TODO: perhaps make a button to retry retrieving a config file
-
+            //TODO: Just return the arraylist containing all of the file lines to exit this method
+//            try {
+//                Scanner scanner = new Scanner(new File("/bin/ConfigList.txt"));
+//                while(scanner.hasNextLine()) {
+//                    String cur_line = scanner.nextLine();
+//
+//                }
+//            }
+//            catch(Exception e) {
+//                e.printStackTrace();
+//            }
         }
         catch (Exception e) {
             System.out.println("error in opening channel or getting response at fetchConfig()");
@@ -737,6 +760,21 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             System.out.println("stacktrace for fetchConfig() failing");
             e.printStackTrace();
         }
-
+    }
+    void processConfigs(ArrayList<String> items) {
+        //Order is as follows: Area name, Sector label, Radio tab, config file directory
+        //Order will be subject to change
+        //BaseStations arraylist stores list of base stations
+        for(int i = 0; i < items.size(); i++) {
+            String[] temp = items.get(i).split(",");
+            if(config_order.get(temp[0]) == null) {
+                config_order.get(temp[0]).add(temp[1]);
+                BaseStations.add(temp[0]);
+            }
+            else {
+                config_order.put(temp[0], new ArrayList<String>());
+            }
+        }
+        // set the adapter for the base station list to BaseStations
     }
 }
