@@ -36,6 +36,7 @@ import org.apache.sshd.common.channel.exception.SshChannelOpenException;
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
@@ -181,6 +182,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //activate the said runnable in background
         sshHandler.post(establishSsh);
+
+        //set up confirmation button
         confirmSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
@@ -188,6 +191,23 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 retrySwitchSector = true;
             }
         });
+
+        //fetch config files
+        Runnable goFetchConfig = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    fetchConfig();
+                }
+                catch (Exception e) {
+                    System.out.println("issue fetching config");
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        //run the above runnable
+        sshHandler.post(goFetchConfig);
 
 
 
@@ -715,24 +735,27 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
 
             //Example use of scp creator: https://stackoverflow.com/questions/62692515/how-to-upload-download-files-using-apache-sshd-scpclient
-
-
+            File configFile = new File(getFilesDir() + "/config.csv");
+            FileOutputStream fileOutputStream = new FileOutputStream(configFile);
             ScpClientCreator creator = ScpClientCreator.instance();
             ScpClient scpClient = creator.createScpClient(sshSession);
-            //scpClient.download("/source"(remote), (local)Paths.get("C:\\Users\\u660221\\destination"), ScpClient.Option.Recursive, ScpClient.Option.PreserveAttributes, ScpClient.Option.TargetIsDirectory);
+            scpClient.download("bin/ConfigList.csv", fileOutputStream);
             //TODO: make the scanner parse CSV file and make arrays for the ui element to use
             //TODO: perhaps make a button to retry retrieving a config file
             //TODO: Just return the arraylist containing all of the file lines to exit this method
-//            try {
-//                Scanner scanner = new Scanner(new File("/bin/ConfigList.txt"));
-//                while(scanner.hasNextLine()) {
-//                    String cur_line = scanner.nextLine();
-//
-//                }
-//            }
-//            catch(Exception e) {
-//                e.printStackTrace();
-//            }
+            ArrayList<String> config = new ArrayList<>();
+            try {
+                Scanner scanner = new Scanner(new File(getFilesDir() + "/config.csv"));
+                while(scanner.hasNextLine()) {
+                    String cur_line = scanner.nextLine();
+                    config.add(cur_line);
+                }
+                System.out.println("Successfully read from config file" + config.get(0) + config.get(1));
+                processConfigs(config);
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
         }
         catch (Exception e) {
             System.out.println("error in opening channel or getting response at fetchConfig()");
@@ -761,6 +784,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             e.printStackTrace();
         }
     }
+
+    /**
+     * Method to process string extracted from config csv file
+     * @param items  string ArrayList containing info from the config file
+     */
     void processConfigs(ArrayList<String> items) {
         //Order is as follows: Area name, Sector label, Radio tab, config file directory
         //Order will be subject to change
@@ -775,6 +803,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 config_order.put(temp[0], new ArrayList<String>());
             }
         }
+
         // set the adapter for the base station list to BaseStations
     }
 }
