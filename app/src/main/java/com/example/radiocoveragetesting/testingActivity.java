@@ -43,6 +43,9 @@ import java.lang.reflect.Array;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -65,14 +68,14 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     Handler mainHandler;
     HandlerThread thread;
     ByteArrayOutputStream errStream;
-    Spinner spinnerBaseStation, spinnerSector;
+    Spinner spinnerArea;
     Boolean retryFetchStat, retrySwitchSector;
     Boolean updateEnabled, isLoginAttempt, sectorsSet, firstRun;
     String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
     ArrayList<String> coverageDatas = new ArrayList<>();
-    Map<String, ArrayList<String>> config_order;
-    ArrayList<String> BaseStations;
+    Map<String, ArrayList<String>> config_order = new HashMap<String, ArrayList<String>>();
+    ArrayList<String> AreaCombos = new ArrayList<String>();
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -94,13 +97,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         retryFetchStat = true;
         retrySwitchSector = true;
         isLoginAttempt = true;
-        spinnerBaseStation = findViewById(R.id.select_sector);
-        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
-        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerBaseStation.setAdapter(adapter1);
-        spinnerBaseStation.setOnItemSelectedListener(this);
-
-        spinnerSector = findViewById(R.id.select_tower);
+        spinnerArea = findViewById(R.id.select_area);
+//        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
+//        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        spinnerBaseStation.setAdapter(adapter1);
+        spinnerArea.setOnItemSelectedListener(this);
+        confirmSwitch = findViewById(R.id.confirm_area);
 
 
         Intent intent = getIntent();
@@ -116,7 +118,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         startStop = findViewById(R.id.start_stop);
         export = findViewById(R.id.export);
         currentSector = findViewById(R.id.cur_sector);
-        confirmSwitch = findViewById(R.id.confirm_sector);
 
         //get login cred from intent
         host = intent.getStringExtra("host");
@@ -198,6 +199,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             public void run() {
                 try {
                     fetchConfig();
+
                 }
                 catch (Exception e) {
                     System.out.println("issue fetching config");
@@ -209,7 +211,17 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         //run the above runnable
         sshHandler.post(goFetchConfig);
 
+        //need runonUI thread to properly update the spinner dropdown list without causing an error
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // set the adapter for the base station list to BaseStations
+                ArrayAdapter<String> adapter1 = new ArrayAdapter<String> (testingActivity.this, android.R.layout.simple_spinner_item, AreaCombos) ;
+                adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerArea.setAdapter(adapter1);
 
+            }
+        });
 
         //Setting onClick Listener for Start/Stop Button
         startStop.setOnClickListener(new View.OnClickListener() {
@@ -270,7 +282,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
         });
     }
-
     /**
      * Updates stat TextViews and also determines if update should continue
      * Make sure to post it to mainHandler if using it in background
@@ -504,40 +515,42 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      */
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
-        Spinner spin = (Spinner) adapterView;
-        //String[] baseStationList = getResources().getStringArray(R.array.Base_station_list);
-        int sectorListId;
-        if(spin.getId() == R.id.select_sector)
-        {
-            String selectedBaseStation = adapterView.getItemAtPosition(position).toString();
-            switch (selectedBaseStation) {
-                case "DEA DO":
-                    sectorListId = R.array.DEA_DO_sector_list;
-                    break;
-                case "Edinberg":
-                    sectorListId = R.array.Edinberg_sector_list;
-                    break;
-                case "Mission TX":
-                    sectorListId = R.array.Mission_sector_list;
-                    break;
-                case "Weslaco":
-                    sectorListId = R.array.Weslaco_sector_list;
-                    break;
-                default:
-                    sectorListId = R.array.DEA_DO_sector_list; //merely a default. Should never happen
-                    System.out.println("problem processing base selection in onItemSelection()");
-            }
-
-            ArrayAdapter<CharSequence>adapter2 = ArrayAdapter.createFromResource(this, sectorListId, android.R.layout.simple_spinner_item);
-            adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerSector.setAdapter(adapter2);
-            spinnerSector.setOnItemSelectedListener(this);
-
-        }
-        else if(spin.getId() == R.id.select_tower)
-        {
-            selectedSector =  adapterView.getItemAtPosition(position).toString();
-        }
+        //going to comment out everything here for now - i have changed the view setup to use only
+        //one spinner instead of two
+//        Spinner spin = (Spinner) adapterView;
+//        //String[] baseStationList = getResources().getStringArray(R.array.Base_station_list);
+//        int sectorListId;
+//        if(spin.getId() == R.id.select_sector)
+//        {
+//            String selectedBaseStation = adapterView.getItemAtPosition(position).toString();
+//            switch (selectedBaseStation) {
+//                case "DEA DO":
+//                    sectorListId = R.array.DEA_DO_sector_list;
+//                    break;
+//                case "Edinberg":
+//                    sectorListId = R.array.Edinberg_sector_list;
+//                    break;
+//                case "Mission TX":
+//                    sectorListId = R.array.Mission_sector_list;
+//                    break;
+//                case "Weslaco":
+//                    sectorListId = R.array.Weslaco_sector_list;
+//                    break;
+//                default:
+//                    sectorListId = R.array.DEA_DO_sector_list; //merely a default. Should never happen
+//                    System.out.println("problem processing base selection in onItemSelection()");
+//            }
+//
+//            ArrayAdapter<CharSequence>adapter2 = ArrayAdapter.createFromResource(this, sectorListId, android.R.layout.simple_spinner_item);
+//            adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//            spinnerSector.setAdapter(adapter2);
+//            spinnerSector.setOnItemSelectedListener(this);
+//
+//        }
+//        else if(spin.getId() == R.id.select_tower)
+//        {
+//            selectedSector =  adapterView.getItemAtPosition(position).toString();
+//        }
     }
 
     /**
@@ -722,7 +735,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      */
     private void fetchConfig() {
         //change the command to new command that fetches config file later
-        String command = "cat bin/ConfigList.txt \n";
+//        String command = "cat bin/ConfigList.txt \n";
         System.out.println("fetchConfig() running)");
         ArrayList<String> ans = new ArrayList<>();
         String responseString;
@@ -795,15 +808,27 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         //BaseStations arraylist stores list of base stations
         for(int i = 0; i < items.size(); i++) {
             String[] temp = items.get(i).split(",");
-            if(config_order.get(temp[0]) == null) {
-                config_order.get(temp[0]).add(temp[1]);
-                BaseStations.add(temp[0]);
-            }
-            else {
-                config_order.put(temp[0], new ArrayList<String>());
+            System.out.println(i + ": " + config_order.get(temp[0]));
+            List<String> itemsList = config_order.get(temp[0]);
+
+            // if list does not exist create it
+            if(itemsList == null) {
+                itemsList = new ArrayList<String>();
+                itemsList.add(temp[1]);
+                config_order.put(temp[0], (ArrayList<String>) itemsList);
+//                AreaCombos.add(temp[0]);
+            } else {
+                // add if item is not already in list
+                if(!itemsList.contains(temp[1])) itemsList.add(temp[1]);
             }
         }
-
-        // set the adapter for the base station list to BaseStations
+        Iterator hmIterator = config_order.entrySet().iterator();
+        while (hmIterator.hasNext()) {
+            Map.Entry mapElement = (Map.Entry)hmIterator.next();
+            ArrayList<String> marks = (ArrayList<String>) mapElement.getValue();
+            for(int i = 0; i < marks.size(); i++) {
+                AreaCombos.add(mapElement.getKey() + " - " + marks.get(i));
+            }
+        }
     }
 }
