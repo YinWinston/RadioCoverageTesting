@@ -90,19 +90,20 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * @param savedInstanceState record of what state the app was in previously
      */
     protected void onCreate(Bundle savedInstanceState) {
-        sectorsSet = false; firstRun = true;
-        Log.d("test", "the testingActivity works");
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_testing);
+        sectorsSet = false;
+        firstRun = true;
         retryFetchStat = true;
         retrySwitchSector = true;
         isLoginAttempt = true;
-        spinnerArea = findViewById(R.id.select_area);
+        //Log.d("test", "the testingActivity works");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_testing);
+
 //        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
 //        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 //        spinnerBaseStation.setAdapter(adapter1);
-        spinnerArea.setOnItemSelectedListener(this);
-        confirmSwitch = findViewById(R.id.confirm_area);
+
+
 
 
         Intent intent = getIntent();
@@ -118,6 +119,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         startStop = findViewById(R.id.start_stop);
         export = findViewById(R.id.export);
         currentSector = findViewById(R.id.cur_sector);
+        spinnerArea = (Spinner) findViewById(R.id.select_area);
+        confirmSwitch = findViewById(R.id.confirm_area);
+
 
         //get login cred from intent
         host = intent.getStringExtra("host");
@@ -143,7 +147,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
         });
 
-        //I don't get what this does, but the code breaks without it
+
         // Setting user.com property manually
         // since isn't set by default in android
         String key = "user.home";
@@ -152,13 +156,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         String val = sysContext.getApplicationInfo().dataDir;
         System.setProperty(key, val);
 
-        // Creating a client instance
+        // Creating a ssh client instance
         client = SshClient.setUpDefaultClient();
         client.setForwardingFilter(AcceptAllForwardingFilter.INSTANCE);
         client.start();
 
         //mainHandler allows a background thread to access main thread and update ui
-        //mainHandler = new Handler();
 
         thread = new HandlerThread("MyHandlerThread");
         thread.start();
@@ -184,15 +187,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         //activate the said runnable in background
         sshHandler.post(establishSsh);
 
-        //set up confirmation button
-        confirmSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                switchSector();
-                retrySwitchSector = true;
-            }
-        });
-
         //fetch config files
         Runnable goFetchConfig = new Runnable() {
             @Override
@@ -210,8 +204,14 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //run the above runnable
         sshHandler.post(goFetchConfig);
-
+        /*
+        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
+        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        */
+        //spinnerBaseStation.setAdapter(adapter1);
+        //spinnerBaseStation.setOnItemSelectedListener(this);
         //need runonUI thread to properly update the spinner dropdown list without causing an error
+        /*
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -220,8 +220,53 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinnerArea.setAdapter(adapter1);
 
+        //set up confirmation button
+        confirmSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                switchSector();
+                retrySwitchSector = true;
             }
         });
+            }
+        });
+        */
+        spinnerArea.setOnItemSelectedListener(this);
+        /*
+        spinnerArea.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                System.out.println("hey its working");
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                System.out.println("kind of working");
+            }
+        });
+        */
+        String[] hii = new String[AreaCombos.size()];
+        hii = AreaCombos.toArray(hii);
+        //System.out.println("hii0: " + AreaCombos.get(0));
+
+        ArrayList<String> testList = new ArrayList<>(3);
+        testList.add("gu");
+        testList.add("go");
+
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<> (this, android.R.layout.simple_spinner_item, testList) ;
+        //ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
+        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerArea.setAdapter(adapter1);
+        adapter1.notifyDataSetChanged();
+
+        confirmSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                switchSector();
+                retrySwitchSector = true;
+            }
+        });
+
 
         //Setting onClick Listener for Start/Stop Button
         startStop.setOnClickListener(new View.OnClickListener() {
@@ -515,6 +560,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      */
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
+        System.out.println("onItemSelected Activated");
+        if (adapterView.getItemAtPosition(position).toString().equals("Edinberg - A")){
+            System.out.println("edinbergA selected");
+        }
+
         //going to comment out everything here for now - i have changed the view setup to use only
         //one spinner instead of two
 //        Spinner spin = (Spinner) adapterView;
