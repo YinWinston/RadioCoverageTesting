@@ -3,6 +3,7 @@ package com.example.radiocoveragetesting;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -174,6 +175,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             public void run() {
                 try {
                     establishSshSession();
+                    System.out.println("SSH session established");
                 }
                 catch (Exception e) {
                     System.out.println("issue 1");
@@ -186,14 +188,22 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //activate the said runnable in background
         sshHandler.post(establishSsh);
-
+//        spinnerArea.setOnItemSelectedListener(this);
         //fetch config files
         Runnable goFetchConfig = new Runnable() {
             @Override
             public void run() {
                 try {
                     fetchConfig();
-
+                    System.out.println("Config File Fetched");
+                    /* deletes dummy test index */
+                    AreaCombos.remove("temp");
+                    /*                           */
+//                    ArrayAdapter<String> adapter1 = new ArrayAdapter<String> (testingActivity.this, android.R.layout.simple_spinner_item, AreaCombos);
+//                    //ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
+//                    adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//                    spinnerArea.setAdapter(adapter1);
+//                    adapter1.notifyDataSetChanged();
                 }
                 catch (Exception e) {
                     System.out.println("issue fetching config");
@@ -231,7 +241,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
         });
         */
-        spinnerArea.setOnItemSelectedListener(this);
+//        spinnerArea.setOnItemSelectedListener(this);
         /*
         spinnerArea.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -247,17 +257,24 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         */
         String[] hii = new String[AreaCombos.size()];
         hii = AreaCombos.toArray(hii);
-        //System.out.println("hii0: " + AreaCombos.get(0));
+//        System.out.println("hii0: " + AreaCombos.get(0));
 
-        ArrayList<String> testList = new ArrayList<>(3);
-        testList.add("gu");
-        testList.add("go");
+//        ArrayList<String> testList = new ArrayList<>(3);
+//        testList.add("gu");
+//        testList.add("go");
 
-        ArrayAdapter<String> adapter1 = new ArrayAdapter<> (this, android.R.layout.simple_spinner_item, testList) ;
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<> (this, android.R.layout.simple_spinner_item, AreaCombos);
+
+        //required line to make the arraylist update properly
+        AreaCombos.add("temp");
+        /////////////////////////////////
+
         //ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
         adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerArea.setAdapter(adapter1);
+        spinnerArea.setSelection(0,false);
         adapter1.notifyDataSetChanged();
+        spinnerArea.setOnItemSelectedListener(this);
 
         confirmSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
