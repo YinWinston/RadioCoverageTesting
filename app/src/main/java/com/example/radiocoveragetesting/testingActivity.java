@@ -77,6 +77,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     ArrayList<String> coverageDatas = new ArrayList<>();
     Map<String, ArrayList<String>> config_order = new HashMap<String, ArrayList<String>>();
     ArrayList<String> AreaCombos = new ArrayList<String>();
+    testingActivity thisReference = this;
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -255,26 +256,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
         });
         */
-        String[] hii = new String[AreaCombos.size()];
-        hii = AreaCombos.toArray(hii);
-//        System.out.println("hii0: " + AreaCombos.get(0));
 
-//        ArrayList<String> testList = new ArrayList<>(3);
-//        testList.add("gu");
-//        testList.add("go");
 
-        ArrayAdapter<String> adapter1 = new ArrayAdapter<> (this, android.R.layout.simple_spinner_item, AreaCombos);
 
-        //required line to make the arraylist update properly
-        AreaCombos.add("temp");
-        /////////////////////////////////
-
-        //ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
-        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerArea.setAdapter(adapter1);
-        spinnerArea.setSelection(0,false);
-        adapter1.notifyDataSetChanged();
-        spinnerArea.setOnItemSelectedListener(this);
 
         confirmSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -884,9 +868,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 itemsList.add(temp[1]);
                 config_order.put(temp[0], (ArrayList<String>) itemsList);
 //                AreaCombos.add(temp[0]);
-            } else {
+            }
+            else {
                 // add if item is not already in list
-                if(!itemsList.contains(temp[1])) itemsList.add(temp[1]);
+                if(!itemsList.contains(temp[1])) {
+                    itemsList.add(temp[1]);
+                }
             }
         }
         Iterator hmIterator = config_order.entrySet().iterator();
@@ -897,5 +884,18 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 AreaCombos.add(mapElement.getKey() + " - " + marks.get(i));
             }
         }
+        //signals main thread to set up the spinner now that the arraylist is populated
+        Runnable setUpSpinner = new Runnable() {
+            @Override
+            public void run() {
+                ArrayAdapter<String> adapter1 = new ArrayAdapter<> (thisContext, android.R.layout.simple_spinner_item, AreaCombos);
+                adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerArea.setAdapter(adapter1);
+                //spinnerArea.setSelection(0,false);
+                adapter1.notifyDataSetChanged();
+                spinnerArea.setOnItemSelectedListener(thisReference);
+            }
+        };
+        mainHandler.post(setUpSpinner);
     }
 }
