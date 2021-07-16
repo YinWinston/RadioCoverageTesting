@@ -72,6 +72,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     Spinner spinnerArea;
     Boolean retryFetchStat, retrySwitchSector;
     Boolean updateEnabled, isLoginAttempt, sectorsSet, firstRun;
+    ArrayList<String> configFileTranscript;
     String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
     ArrayList<String> coverageDatas = new ArrayList<>();
@@ -562,9 +563,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
         System.out.println("onItemSelected Activated");
-        if (adapterView.getItemAtPosition(position).toString().equals("Edinberg - A")){
-            System.out.println("edinbergA selected");
-        }
+        selectedSector = adapterView.getItemAtPosition(position).toString();
 
         //going to comment out everything here for now - i have changed the view setup to use only
         //one spinner instead of two
@@ -617,61 +616,29 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * Runs when you hit the confirm sector switch button, commands pi to change config file
      */
     public void switchSector() {
-        String commandArg;
+        String switchCommandArg;
         //TODO: find out what the arguments for switch command should be for each sector
-        switch (selectedSector) {
-            case "DEA_NW":
-                commandArg = "placeholder";
-                break;
-            case "DEA_NE":
-                commandArg = "";
-                break;
-            case "DEA_SE":
-                commandArg = "";
-                break;
-            case "DEA_SW":
-                commandArg = "";
-                break;
-            case "Edinberg_W":
-                commandArg = "";
-                break;
-            case "Edinberg_E":
-                commandArg = "";
-                break;
-            case "Edinberg_S":
-                commandArg = "";
-                break;
-            case "Mission_W":
-                commandArg = "";
-                break;
-            case "Mission_N":
-                commandArg = "";
-                break;
-            case "Mission_E":
-                commandArg = "";
-                break;
-            case "Weslaco_NW":
-                commandArg = "";
-                break;
-            case "Weslaco_NE":
-                commandArg = "";
-                break;
-            case "Weslaco_SE":
-                commandArg = "";
-                break;
-            case "Weslaco_SW":
-                commandArg = "";
-                break;
-            default:
-                commandArg = "";
-                System.out.println("This line should not run");
+        String[] selectedSectorSplit = selectedSector.split(" - ");
+        String baseStation = selectedSectorSplit[0];
+        String sector = selectedSectorSplit[1];
+        String selectedRadioTab;
+        String configFilePath;
+
+        for(String s: configFileTranscript){
+            String[] temp = s.split(",");
+            if (baseStation.equals(temp[0]) && sector.equals(temp[1])){
+                selectedRadioTab = temp[2];
+                configFilePath = temp[3];
+            }
         }
+        //everything from here on will need adjustment later
+        switchCommandArg = baseStation + " " + sector;
 
         Runnable switchSector = new Runnable() {
             @Override
             public void run() {
                 try {
-                    String command = "switch " + commandArg + "\n";
+                    String command = "switch " + switchCommandArg + "\n";
 
                     // Open channel
                     sshChannel.open().verify(5, TimeUnit.SECONDS);
@@ -854,6 +821,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * @param items  string ArrayList containing info from the config file
      */
     void processConfigs(ArrayList<String> items) {
+        configFileTranscript = items;
         //Order is as follows: Area name, Sector label, Radio tab, config file directory
         //Order will be subject to change
         //BaseStations arraylist stores list of base stations
@@ -876,6 +844,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 }
             }
         }
+        String[] temp = items.get(0).split(",");
+        System.out.println(config_order.get(temp[0]));
+        temp = items.get(1).split(",");
+        System.out.println(config_order.get(temp[0]));
+        temp = items.get(2).split(",");
+        System.out.println(config_order.get(temp[0]));
         Iterator hmIterator = config_order.entrySet().iterator();
         while (hmIterator.hasNext()) {
             Map.Entry mapElement = (Map.Entry)hmIterator.next();
