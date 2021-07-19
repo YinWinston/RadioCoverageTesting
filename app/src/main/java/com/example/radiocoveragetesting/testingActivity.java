@@ -47,7 +47,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
@@ -75,7 +74,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     ArrayList<String> configFileTranscript;
     String selectedSector;
     Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
-    ArrayList<String> coverageDatas = new ArrayList<>();
+    ArrayList<String> coverageData = new ArrayList<>();
     Map<String, ArrayList<String>> config_order = new HashMap<String, ArrayList<String>>();
     ArrayList<String> AreaCombos = new ArrayList<String>();
     testingActivity thisReference = this;
@@ -142,10 +141,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 System.out.println("Database Upload");
                 firebaseDatabase = FirebaseDatabase.getInstance();
                 databaseReference = firebaseDatabase.getReference("CoverageData").push();
-                for(int i = 0; i < coverageDatas.size(); i++){
+                for(int i = 0; i < coverageData.size(); i++){
                     cur_coverage = new CoverageData();
-                    System.out.println(coverageDatas.get(i));
-                    addDataToFirebase(coverageDatas.get(i));
+                    System.out.println(coverageData.get(i));
+                    addDataToFirebase(coverageData.get(i));
                 }
             }
         });
@@ -222,7 +221,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         */
         //spinnerBaseStation.setAdapter(adapter1);
         //spinnerBaseStation.setOnItemSelectedListener(this);
-        //need runonUI thread to properly update the spinner dropdown list without causing an error
+        //need runOnUI thread to properly update the spinner dropdown list without causing an error
         /*
         runOnUiThread(new Runnable() {
             @Override
@@ -277,7 +276,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 //Checks if button should start/stop ssh session
                 if(startStop.getText().equals("Start")) {
                     // Changes State of Button
-                    startStop.setText("Stop");
+                    startStop.setText(R.string.stop);
                     startStop.setBackgroundColor(Color.RED);
 
                     updateEnabled = true;
@@ -307,7 +306,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 }
                 else {
                     // Changes State of Button
-                    startStop.setText("Start");
+                    startStop.setText(R.string.start);
                     startStop.setBackgroundColor(Color.GREEN);
                     updateEnabled = false;
                     /*
@@ -340,8 +339,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         if (stat.size() > 7) {
 
-            snrUp.setText("SNR Up \n" + stat.get(0)); //good
-            snrDown.setText("SNR Down \n" + stat.get(1)); //good
+            snrUp.setText(getString(R.string.Snr_up_value, stat.get(0))); //good
+            snrDown.setText(getString(R.string.Snr_down_value, stat.get(1))); //good
 
             if(Double.parseDouble(stat.get(0)) > highest_snr_up) {
                 highest_snr_up = Double.parseDouble(stat.get(0));
@@ -349,12 +348,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             if(Double.parseDouble(stat.get(1)) > highest_snr_down) {
                 highest_snr_down = Double.parseDouble(stat.get(1));
             }
-            peakSnrUp.setText("Peak SNR Up \n" + String.format(Locale.getDefault(), "%f", highest_snr_up));
-            peakSnrDown.setText("Peak SNR Down \n" + String.format(Locale.getDefault(), "%f", highest_snr_down));
-            avgPwrUp.setText("AVG PWR Up \n" + stat.get(4));
-            avgPwrDown.setText("AVG PWR Down \n" + stat.get(5));
-            peakPwrUp.setText("Peak PWR Up \n" + stat.get(6) + " (" + stat.get(7) + ")");
-            peakPwrDown.setText("Peak PWR Down \n" +stat.get(8) + " (" + stat.get(9) + ")");
+            peakSnrUp.setText(getString(R.string.Peak_snr_up_value, highest_snr_up));
+            peakSnrDown.setText(getString(R.string.Peak_snr_down_value, highest_snr_down));
+            avgPwrUp.setText(getString(R.string.Avg_pwr_up_value, stat.get(4)));
+            avgPwrDown.setText(getString(R.string.Avg_pwr_down_value, stat.get(5)));
+            peakPwrUp.setText(getString(R.string.Peak_pwr_up_value, stat.get(6), stat.get(7)));
+            peakPwrDown.setText(getString(R.string.Peak_pwr_down_value, stat.get(8), stat.get(9)));
         }
 
         if (updateEnabled){
@@ -404,7 +403,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             if(!justStarted) {
                 //find the line containing the info we want
                 String answerLine = response[response.length - 2];
-                coverageDatas.add(answerLine);
+                coverageData.add(answerLine);
                 System.out.println("Testing line: " + answerLine);//show it to log to manually check
                 //formatting the string
                 String[] answerArray = answerLine.split(",");
@@ -480,17 +479,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * Establishes sshSession
      * Pretty sure that you need to call it in background thread.
      * use sshHandler.post() to run it in background
-     * @return true if session is successfully established, else false
      */
-    private boolean establishSshSession(){
-
+    private void establishSshSession(){
         try {
-
             sshSession = client.connect(username, host, port).verify(5000).getSession();
-
-
-
-
             sshSession.addPasswordIdentity(password);
             sshSession.auth().verify(5000);
             sshChannel = sshSession.createChannel(Channel.CHANNEL_SHELL);
@@ -510,15 +502,19 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 //                    e.printStackTrace();
 //                }
 //            }
-            return true;
+
         }
         catch (Exception e) {
             if (isLoginAttempt){
                 isLoginAttempt = false;
                 Intent loginFailIntent = new Intent(this, MainActivity.class);
-                if (e instanceof UnresolvedAddressException){
+                if (e instanceof UnresolvedAddressException ){
                     System.out.println("error with address");
                     loginFailIntent.putExtra("reason", "Invalid address");
+                }
+                else if (e.getMessage() == null){
+                    System.out.println("unknown error during login attempt");
+                    loginFailIntent.putExtra("reason", "Unknown");
                 }
                 else if (e instanceof SshException && e.getMessage().contains("timeout")){
                     System.out.println("timeout error");
@@ -533,12 +529,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     loginFailIntent.putExtra("reason", "Unknown");
                 }
                 startActivity(loginFailIntent);
-
             }
 
             System.out.println("failed to establish session");
             e.printStackTrace();
-            return false;
         }
     }
 
@@ -713,7 +707,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         Runnable updateSector = new Runnable() {
             @Override
             public void run() {
-                currentSector.setText("Current sector: " + newSectorName);
+                currentSector.setText(getString(R.string.Current_sector, newSectorName));
                 Toast toast = Toast.makeText(thisContext, "Sector changed", Toast.LENGTH_SHORT);
                 toast.show();
             }
