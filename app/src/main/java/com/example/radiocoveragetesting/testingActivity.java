@@ -274,7 +274,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             @Override
             public void onClick(View v) {
                 //Checks if button should start/stop ssh session
-                if(startStop.getText().equals("Start")) {
+                if(startStop.getText().toString().equals("Start")) {
                     // Changes State of Button
                     startStop.setText(R.string.stop);
                     startStop.setBackgroundColor(Color.RED);
@@ -400,6 +400,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
             //if this is first time the method is running since ssh connection
             //was established, the output format will be wrong, so skip it once
+            //TODO: Handle the empty cases
             if(!justStarted) {
                 //find the line containing the info we want
                 String answerLine = response[response.length - 2];
@@ -411,9 +412,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 double[] pwr_downs = new double[]{Double.parseDouble(answerArray[6]),
                         Double.parseDouble(answerArray[7]),Double.parseDouble(answerArray[8]),
                         Double.parseDouble(answerArray[9])};
-                double[] pwr_ups = new double[]{Double.parseDouble(answerArray[21]),
-                        Double.parseDouble(answerArray[22]),Double.parseDouble(answerArray[23]),
-                        Double.parseDouble(answerArray[24])};
+                double[] pwr_ups = new double[]{Double.parseDouble(answerArray[23]),
+                        Double.parseDouble(answerArray[24]),Double.parseDouble(answerArray[25]),
+                        Double.parseDouble(answerArray[26])};
                 double avg_p_downs = (pwr_downs[0] + pwr_downs[1] + pwr_downs[2]+ pwr_downs[3])/4.0;
                 double avg_p_ups = (pwr_ups[0] + pwr_ups[1] + pwr_ups[2]+ pwr_ups[3])/4.0;
                 double peak_p_down = 10000; double peak_p_up = -10000;
@@ -429,9 +430,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                         p_sector_up = sector_conv[i];
                     }
                 }
-                ans.add(answerArray[20]);  //snrUp-good
+                ans.add(answerArray[22]);  //snrUp-good
                 ans.add(answerArray[5]);  //snrDown-good
-                ans.add(answerArray[20]);  //peakSnrUp-good
+                ans.add(answerArray[22]);  //peakSnrUp-good
                 ans.add(answerArray[5]);  //peakSnrDown-good
                 ans.add(Double.toString(avg_p_ups));  //avgPwrUp-good
                 ans.add(Double.toString(avg_p_downs));  //avgPwrDown-good
