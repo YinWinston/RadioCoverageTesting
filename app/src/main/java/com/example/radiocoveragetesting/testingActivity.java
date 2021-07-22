@@ -101,6 +101,13 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_testing);
 
+//        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
+//        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        spinnerBaseStation.setAdapter(adapter1);
+
+
+
+
         Intent intent = getIntent();
 
         snrUp = findViewById(R.id.SNR_Up);
@@ -543,9 +550,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     /**
      * Determines what action to take when user chooses something on spinner
      * @param adapterView the spinner
-     * @param view the spinner view in question
+     * @param view I think context?
      * @param position the location in terms of array
-     * @param l id
+     * @param l no idea
      */
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
