@@ -78,6 +78,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     Map<String, ArrayList<String>> config_order = new HashMap<String, ArrayList<String>>();
     ArrayList<String> AreaCombos = new ArrayList<String>();
     testingActivity thisReference = this;
+    Toast errorToast;
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -342,10 +343,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             snrUp.setText(getString(R.string.Snr_up_value, stat.get(0))); //good
             snrDown.setText(getString(R.string.Snr_down_value, stat.get(1))); //good
 
-            if(Double.parseDouble(stat.get(0)) > highest_snr_up) {
+
+
+            if(!stat.get(0).equals("") && Double.parseDouble(stat.get(0)) > highest_snr_up) {
                 highest_snr_up = Double.parseDouble(stat.get(0));
             }
-            if(Double.parseDouble(stat.get(1)) > highest_snr_down) {
+            if(!stat.get(1).equals("") && Double.parseDouble(stat.get(1)) > highest_snr_down) {
                 highest_snr_down = Double.parseDouble(stat.get(1));
             }
             peakSnrUp.setText(getString(R.string.Peak_snr_up_value, highest_snr_up));
@@ -354,12 +357,36 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             avgPwrDown.setText(getString(R.string.Avg_pwr_down_value, stat.get(5)));
             peakPwrUp.setText(getString(R.string.Peak_pwr_up_value, stat.get(6), stat.get(7)));
             peakPwrDown.setText(getString(R.string.Peak_pwr_down_value, stat.get(8), stat.get(9)));
+            if (stat.get(0).equals("") || stat.get(1).equals("") || stat.get(4).equals("") || stat.get(5).equals("")){
+                System.out.println("Radio likely not connected.");
+                showToastMsg("Pi returned no data on one or more stat fields. Radio has most likely lost signal.");
+            }
         }
+
 
         if (updateEnabled){
             sshHandler.postDelayed(updater,1000);
         }
 
+    }
+
+    /**
+     * Shows a toast with a message, handles case when a toast is already present
+     * @param msg message you want to show in String format
+     */
+    private void showToastMsg(String msg){
+        Runnable errorMsg = new Runnable() {
+            @Override
+            public void run() {
+                if(errorToast != null) {
+                    errorToast.cancel();
+                }
+                errorToast = Toast.makeText(thisContext, msg, Toast.LENGTH_SHORT);
+                errorToast.show();
+
+            }
+        };
+        mainHandler.post(errorMsg);
     }
 
 
@@ -410,11 +437,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 String[] answerArray = answerLine.split(",");
                 System.out.println("Post-process: " +   Arrays.toString(answerArray));
                 double[] pwr_downs = new double[]{Double.parseDouble(answerArray[6]),
-                        Double.parseDouble(answerArray[7]),Double.parseDouble(answerArray[8]),
+                        Double.parseDouble(answerArray[7]), Double.parseDouble(answerArray[8]),
                         Double.parseDouble(answerArray[9])};
                 double[] pwr_ups = new double[]{Double.parseDouble(answerArray[23]),
-                        Double.parseDouble(answerArray[24]),Double.parseDouble(answerArray[25]),
-                        Double.parseDouble(answerArray[26])};
+                        Double.parseDouble(answerArray[24]), Double.parseDouble(answerArray[25]),
+                        Double.parseDouble(answerArray[26])};// handle empty string cases
                 double avg_p_downs = (pwr_downs[0] + pwr_downs[1] + pwr_downs[2]+ pwr_downs[3])/4.0;
                 double avg_p_ups = (pwr_ups[0] + pwr_ups[1] + pwr_ups[2]+ pwr_ups[3])/4.0;
                 double peak_p_down = 10000; double peak_p_up = -10000;
@@ -470,6 +497,15 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 }
 
             }
+            if(e instanceof ArrayIndexOutOfBoundsException && Objects.requireNonNull(e.getMessage()).trim().equals(
+                    "length=1; index=6")){
+                showToastMsg("Radio may be offline. Check that both radios are online and communicating properly.");
+            }
+            else if (e instanceof NumberFormatException && Objects.requireNonNull(e.getMessage()).trim().equals(
+                    "empty String")){
+                showToastMsg("One or more antennae are sending or receiving no signals. Check that the right sector has been selected.");
+            }
+
             System.out.println("stacktrace for why first attempt failed");
             e.printStackTrace();
         }
@@ -653,6 +689,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     // mess up formatting for next stat display update. Find a way around this.
 
                     retrySwitchSector = true;
+
                     switchSectorSuccess(selectedSector);
 
                     /*
@@ -709,11 +746,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             @Override
             public void run() {
                 currentSector.setText(getString(R.string.Current_sector, newSectorName));
-                Toast toast = Toast.makeText(thisContext, "Sector changed", Toast.LENGTH_SHORT);
-                toast.show();
             }
         };
+        //TODO: test showToastMsg
         mainHandler.post(updateSector);
+        showToastMsg("Sector changed");
     }
     //TODO: Change to parse all of the different statistics independently
     private void addDataToFirebase(String wholeString) {
