@@ -595,7 +595,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
         System.out.println("onItemSelected Activated");
         selectedSector = adapterView.getItemAtPosition(position).toString();
-
+        //TODO make this method update the sector name
         //going to comment out everything here for now - i have changed the view setup to use only
         //one spinner instead of two
 //        Spinner spin = (Spinner) adapterView;
@@ -900,6 +900,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 //spinnerArea.setSelection(0,false);
                 adapter1.notifyDataSetChanged();
                 spinnerArea.setOnItemSelectedListener(thisReference);
+                spinnerArea.setSelection(1);
             }
         };
         mainHandler.post(setUpSpinner);

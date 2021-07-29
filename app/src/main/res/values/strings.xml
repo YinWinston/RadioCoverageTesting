@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">gfg_ssh</string>
+    <string name="app_name">CACI Radio Coverage Testing</string>
     <string name="host">Host</string>
     <string name="port">Port</string>
     <string name="defaultPort">22</string>
@@ -9,18 +9,18 @@
     <string name="login"><b>Login</b></string>
     <string name="start"><b>Start</b></string>
     <string name="stop"><b>Stop</b></string>
-    <string name = "SNR_up"><u>SNR Up</u><br/>25.1</string>
-    <string name = "SNR_down"><u>SNR Down</u><br/>25.1</string>
-    <string name = "peak_SNR_up"><u>Peak SNR Up</u><br/>25.1</string>
-    <string name = "peak_SNR_down"><u>Peak SNR Down</u><br/>25.1</string>
-    <string name = "avg_pwr_up"><u>AVG PWR Up</u><br/>25.1</string>
-    <string name = "avg_pwr_down"><u>AVG PWR Down</u><br/>25.1</string>
-    <string name = "peak_PWR_up"><u>Peak PWR Up</u><br/>25.1</string>
-    <string name = "peak_pwr_down"><u>Peak PWR Down</u><br/>25.1</string>
+    <string name = "SNR_up"><u>SNR Up</u>\n 25.1</string>
+    <string name = "SNR_down"><u>SNR Down</u>\n 25.1</string>
+    <string name = "peak_SNR_up"><u>Peak SNR Up</u>\n 25.1</string>
+    <string name = "peak_SNR_down"><u>Peak SNR Down</u>\n 25.1</string>
+    <string name = "avg_pwr_up"><u>AVG PWR Up</u>\n 25.1</string>
+    <string name = "avg_pwr_down"><u>AVG PWR Down</u>\n 25.1</string>
+    <string name = "peak_PWR_up"><u>Peak PWR Up</u>\n 25.1</string>
+    <string name = "peak_pwr_down"><u>Peak PWR Down</u>\n 25.1</string>
     <string name = "start_stop"><b>Start</b></string>
     <string name = "export"><b>Export</b></string>
     <string name = "switch_config"><b>Switch Configurations</b></string>
-    <string name = "cur_sector"><b><u>Current Sector</u></b><br/>Weslaco</string>
+    <string name = "cur_sector"><b><u>Current Sector</u></b>\n DEMO_N</string>
     <string name = "sector">Sector</string>
     <string name = "tower">Tower</string>
     <string name = "ok"><b>OK</b></string>
@@ -30,14 +30,14 @@
     <string name = "caci_image_desc">CACI Logo</string>
     <string name = "enter_login_info"><b>Enter Login Information Below</b></string>
     <string name = "test_button"><b>Test</b></string>
-    <string name = "Current_sector"><b>Current sector: %1$s</b></string>
+    <string name = "Current_sector"><b>Current sector: \n %1$s</b></string>
     <string name = "Snr_up_value"><b>SNR up \n%1$s</b></string>
     <string name = "Snr_down_value"><b>SNR down \n%1$s</b></string>
     <string name = "Peak_snr_up_value"><b>Peak SNR up \n%1$f</b></string>
     <string name = "Peak_snr_down_value"><b>Peak SNR down \n%1$f</b></string>
     <string name = "Avg_pwr_up_value"><b>Avg pwr up \n%1$s</b></string>
     <string name = "Avg_pwr_down_value"><b>Avg pwr down \n%1$s</b></string>
-    <string name = "Peak_pwr_up_value"><b>Peak pwr up \n%1$s (n%2$s)</b></string>
-    <string name = "Peak_pwr_down_value"><b>Peak pwr down \n%1$s (n%2$s)</b></string>
+    <string name = "Peak_pwr_up_value"><b>Peak pwr up \n%1$s (%2$s)</b></string>
+    <string name = "Peak_pwr_down_value"><b>Peak pwr down \n%1$s (%2$s)</b></string>
 
 </resources>
