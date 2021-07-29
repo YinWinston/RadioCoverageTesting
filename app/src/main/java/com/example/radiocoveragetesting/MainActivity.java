@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                authenticate(v);
+                test(v);
             }
         });
         if(intent.getExtras() != null){
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
             toast.show();
         }
     }
+
 
     public void authenticate(View view) {
 

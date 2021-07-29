@@ -427,7 +427,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
             //if this is first time the method is running since ssh connection
             //was established, the output format will be wrong, so skip it once
-            //TODO: Handle the empty cases
+
             if(!justStarted) {
                 //find the line containing the info we want
                 String answerLine = response[response.length - 2];
