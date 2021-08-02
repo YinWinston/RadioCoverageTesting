@@ -400,6 +400,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         String command = "go\n";
         System.out.println("fetchStats() running)");
         ArrayList<String> ans = new ArrayList<>();
+        String[] answerArray = {""};
         try {
 
             // Open channel
@@ -434,7 +435,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 coverageData.add(answerLine);
                 System.out.println("Testing line: " + answerLine);//show it to log to manually check
                 //formatting the string
-                String[] answerArray = answerLine.split(",");
+                answerArray = answerLine.split(",");
                 System.out.println("Post-process: " +   Arrays.toString(answerArray));
                 double[] pwr_downs = new double[]{Double.parseDouble(answerArray[6]),
                         Double.parseDouble(answerArray[7]), Double.parseDouble(answerArray[8]),
@@ -478,6 +479,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     "Session has been closed"))) {
                 sshChannel.close(true);
                 sshSession.close(true);
+                System.out.println("open failed");
                 try {
                     responseStream.close();
                 }
@@ -499,6 +501,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
             if(e instanceof ArrayIndexOutOfBoundsException && Objects.requireNonNull(e.getMessage()).trim().equals(
                     "length=1; index=6")){
+                if(!answerArray[0].contains("mkdir: cannot create directory"))
                 showToastMsg("Radio may be offline. Check that both radios are online and communicating properly.");
             }
             else if (e instanceof NumberFormatException && Objects.requireNonNull(e.getMessage()).trim().equals(
