@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.channels.UnresolvedAddressException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -652,6 +653,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      */
     public void switchSector() {
         String switchCommandArg;
+        String switchSecCommandArg;
+        String pushCommandArg;
         //TODO: find out what the arguments for switch command should be for each sector
         if(selectedSector == null){
             showToastMsg("Retry after ssh connection is established.");
@@ -660,24 +663,38 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         String[] selectedSectorSplit = selectedSector.split(" - ");
         String baseStation = selectedSectorSplit[0];
         String sector = selectedSectorSplit[1];
-        String selectedRadioTab;
-        String configFilePath;
-
+        String selectedRadioTab = "";
+        String configFilePath = "";
+        Boolean matchNotFound = true;
         for(String s: configFileTranscript){
             String[] temp = s.split(",");
             if (baseStation.equals(temp[0]) && sector.equals(temp[1])){
                 selectedRadioTab = temp[2];
                 configFilePath = temp[3];
+                matchNotFound = false;
             }
+
+        }
+        if(matchNotFound){
+            System.out.println("matching base station/sector not found.");
+            //If this line runs, double check the config file
+            showToastMsg("Double check that the config file is correct.");
         }
         //everything from here on will need adjustment later
         switchCommandArg = baseStation + " " + sector;
+        switchSecCommandArg = selectedRadioTab;
+        System.out.println("switchSecCommandArg" + switchSecCommandArg);
+        pushCommandArg = configFilePath;
+        System.out.println("pushCommandArg" + pushCommandArg);
+
 
         Runnable switchSector = new Runnable() {
             @Override
             public void run() {
                 try {
-                    String command = "switch " + switchCommandArg + "\n";
+                    String switchCommand = "switch " + switchCommandArg + "\n";
+                    String switchSecCommand = "./bin/switch_sec " + switchSecCommandArg + "\n";
+                    String pushCommand = "./bin/pushConfig " + pushCommandArg + "\n";
 
                     // Open channel
                     sshChannel.open().verify(5, TimeUnit.SECONDS);
@@ -685,9 +702,15 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
                     try {
                         OutputStream pipedIn = sshChannel.getInvertedIn();
-                        pipedIn.write(command.getBytes());
+                        pipedIn.write(switchCommand.getBytes());
                         System.out.println("sending command");
                         pipedIn.flush();
+
+                        pipedIn.write(switchSecCommand.getBytes());
+                        pipedIn.flush();
+                        pipedIn.write(pushCommand.getBytes());
+                        pipedIn.flush();
+
                         pipedIn.close();
                     }
                     catch (Exception e) {
