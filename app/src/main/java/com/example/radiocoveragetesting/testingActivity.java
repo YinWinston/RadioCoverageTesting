@@ -177,6 +177,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             public void run() {
                 try {
                     establishSshSession();
+
                     System.out.println("SSH session established");
                 }
                 catch (Exception e) {
@@ -652,6 +653,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     public void switchSector() {
         String switchCommandArg;
         //TODO: find out what the arguments for switch command should be for each sector
+        if(selectedSector == null){
+            showToastMsg("Retry after ssh connection is established.");
+            return;
+        }
         String[] selectedSectorSplit = selectedSector.split(" - ");
         String baseStation = selectedSectorSplit[0];
         String sector = selectedSectorSplit[1];
