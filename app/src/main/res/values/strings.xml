@@ -33,8 +33,8 @@
     <string name = "Current_sector"><b>Current sector: \n %1$s</b></string>
     <string name = "Snr_up_value"><b>SNR up \n%1$s</b></string>
     <string name = "Snr_down_value"><b>SNR down \n%1$s</b></string>
-    <string name = "Peak_snr_up_value"><b>Peak SNR up \n%1$f</b></string>
-    <string name = "Peak_snr_down_value"><b>Peak SNR down \n%1$f</b></string>
+    <string name = "Peak_snr_up_value"><b>Peak SNR up \n%1$s</b></string>
+    <string name = "Peak_snr_down_value"><b>Peak SNR down \n%1$s</b></string>
     <string name = "Avg_pwr_up_value"><b>Avg pwr up \n%1$s</b></string>
     <string name = "Avg_pwr_down_value"><b>Avg pwr down \n%1$s</b></string>
     <string name = "Peak_pwr_up_value"><b>Peak pwr up \n%1$s (%2$s)</b></string>

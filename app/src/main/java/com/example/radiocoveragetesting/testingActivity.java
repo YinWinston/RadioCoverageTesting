@@ -52,6 +52,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.text.DecimalFormat;
+
 
 public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -353,8 +355,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             if(!stat.get(1).equals("") && Double.parseDouble(stat.get(1)) > highest_snr_down) {
                 highest_snr_down = Double.parseDouble(stat.get(1));
             }
-            peakSnrUp.setText(getString(R.string.Peak_snr_up_value, highest_snr_up));
-            peakSnrDown.setText(getString(R.string.Peak_snr_down_value, highest_snr_down));
+            DecimalFormat decimalFormat = new DecimalFormat("#.#");
+            peakSnrUp.setText(getString(R.string.Peak_snr_up_value, decimalFormat.format(highest_snr_up)));
+            peakSnrDown.setText(getString(R.string.Peak_snr_down_value, decimalFormat.format(highest_snr_down)));
             avgPwrUp.setText(getString(R.string.Avg_pwr_up_value, stat.get(4)));
             avgPwrDown.setText(getString(R.string.Avg_pwr_down_value, stat.get(5)));
             peakPwrUp.setText(getString(R.string.Peak_pwr_up_value, stat.get(6), stat.get(7)));
