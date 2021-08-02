@@ -73,15 +73,18 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     ByteArrayOutputStream errStream;
     Spinner spinnerArea;
     Boolean retryFetchStat, retrySwitchSector;
+//    Boolean sector_switched_before = true;
     Boolean updateEnabled, isLoginAttempt, sectorsSet, firstRun;
     ArrayList<String> configFileTranscript;
     String selectedSector;
-    Double highest_snr_up = -100000.0, highest_snr_down = -10000.0;
+    Double highest_snr_up = -100000.0, highest_snr_down = -100000.0;
     ArrayList<String> coverageData = new ArrayList<>();
     Map<String, ArrayList<String>> config_order = new HashMap<String, ArrayList<String>>();
     ArrayList<String> AreaCombos = new ArrayList<String>();
     testingActivity thisReference = this;
     Toast errorToast;
+    String curBaseStation = "";
+    Boolean shouldSwitchConf = false;
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -283,7 +286,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     // Changes State of Button
                     startStop.setText(R.string.stop);
                     startStop.setBackgroundColor(Color.RED);
-
+                    highest_snr_up = -100000.0;
+                    highest_snr_down = -100000.0;
                     updateEnabled = true;
 
 
@@ -655,6 +659,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * Runs when you hit the confirm sector switch button, commands pi to change config file
      */
     public void switchSector() {
+        shouldSwitchConf = false;
         String switchCommandArg;
         String switchSecCommandArg;
         String pushCommandArg;
@@ -666,6 +671,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         String[] selectedSectorSplit = selectedSector.split(" - ");
         String baseStation = selectedSectorSplit[0];
         String sector = selectedSectorSplit[1];
+        if(!baseStation.equals(curBaseStation)) {
+            shouldSwitchConf = true;
+        }
+        curBaseStation = baseStation;
         String selectedRadioTab = "";
         String configFilePath = "";
         Boolean matchNotFound = true;
@@ -689,7 +698,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         System.out.println("switchSecCommandArg" + switchSecCommandArg);
         pushCommandArg = configFilePath;
         System.out.println("pushCommandArg" + pushCommandArg);
-
+        highest_snr_up = -100000.0;
+        highest_snr_down = -100000.0;
 
         Runnable switchSector = new Runnable() {
             @Override
@@ -711,8 +721,10 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
                         pipedIn.write(switchSecCommand.getBytes());
                         pipedIn.flush();
-                        pipedIn.write(pushCommand.getBytes());
-                        pipedIn.flush();
+                        if(shouldSwitchConf) {
+                            pipedIn.write(pushCommand.getBytes());
+                            pipedIn.flush();
+                        }
 
                         pipedIn.close();
                     }
@@ -769,6 +781,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         };
 
         sshHandler.post(switchSector);
+//        sector_switched_before = true;
     }
 
     /**
