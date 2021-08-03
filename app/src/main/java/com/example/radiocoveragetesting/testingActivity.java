@@ -3,12 +3,10 @@ package com.example.radiocoveragetesting;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -17,14 +15,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannel;
@@ -40,9 +34,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.nio.channels.UnresolvedAddressException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,7 +51,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
     TextView snrUp, snrDown, peakSnrUp, peakSnrDown, avgPwrUp, avgPwrDown, peakPwrUp;
     TextView peakPwrDown, currentSector;
-    Button startStop, export, confirmSwitch;
+    Button startStop, record, confirmSwitch;
     String host, username, password;
     Integer port;
     Handler sshHandler;
@@ -82,6 +74,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     ArrayList<String> AreaCombos = new ArrayList<String>();
     testingActivity thisReference = this;
     Toast errorToast;
+    String updateCommand = "poll \n";
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
@@ -123,7 +116,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         peakPwrUp = findViewById(R.id.peak_PWR_up);
         peakPwrDown = findViewById(R.id.peak_PWR_down);
         startStop = findViewById(R.id.start_stop);
-        export = findViewById(R.id.export);
+        record = findViewById(R.id.record);
         currentSector = findViewById(R.id.cur_sector);
         spinnerArea = (Spinner) findViewById(R.id.select_area);
         confirmSwitch = findViewById(R.id.confirm_area);
@@ -135,13 +128,14 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         username = intent.getStringExtra("username");
         password = intent.getStringExtra("password");
 
-        export.setOnClickListener(new View.OnClickListener() {
+        record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //Crashes if you're connected to the Drive-5 Wifi, gotta connect to a diff one
                 /*Method doesn't work properly right now for some reason. Code seems to run w/o
                 error but the database doesn't update. Don't know how to fix this. */
                 //TODO: Use try catch statements here
+                /*
                 System.out.println("Database Upload");
                 firebaseDatabase = FirebaseDatabase.getInstance();
                 databaseReference = firebaseDatabase.getReference("CoverageData").push();
@@ -149,6 +143,25 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     cur_coverage = new CoverageData();
                     System.out.println(coverageData.get(i));
                     addDataToFirebase(coverageData.get(i));
+                }
+                */
+
+                if (record.getText().toString().equals("Start record") || record.getText().toString().equals("Resume record")){
+                    updateCommand = "go \n";
+                    record.setText(R.string.record_stop);
+                    if (startStop.getText().toString().equals("Start poll")){
+                        startStop.callOnClick();
+                    }
+                }
+                else { //record button text is stop
+                    updateCommand = "poll \n";
+                    if(startStop.getText().toString().equals("Start poll")){
+                        record.setText(R.string.record_start);
+                    }
+                    else {
+                        record.setText(R.string.record_resume);
+                    }
+
                 }
             }
         });
@@ -279,9 +292,9 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             @Override
             public void onClick(View v) {
                 //Checks if button should start/stop ssh session
-                if(startStop.getText().toString().equals("Start")) {
+                if(startStop.getText().toString().equals("Start poll")) {
                     // Changes State of Button
-                    startStop.setText(R.string.stop);
+                    startStop.setText(R.string.poll_stop);
                     startStop.setBackgroundColor(Color.RED);
 
                     updateEnabled = true;
@@ -311,9 +324,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 }
                 else {
                     // Changes State of Button
-                    startStop.setText(R.string.start);
+                    startStop.setText(R.string.poll_start);
                     startStop.setBackgroundColor(Color.GREEN);
                     updateEnabled = false;
+                    if (record.getText().toString().equals("Pause record")){
+                        record.callOnClick();
+                    }
                     /*
                     try {
                         sshHandler.removeCallbacks(updater);
@@ -402,7 +418,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      */
     private ArrayList<String> fetchStats() {
         //change the command to new command that returns current stats later
-        String command = "go\n";
         System.out.println("fetchStats() running)");
         ArrayList<String> ans = new ArrayList<>();
         String[] answerArray = {""};
@@ -414,7 +429,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
             try {
                 OutputStream pipedIn = sshChannel.getInvertedIn();
-                pipedIn.write(command.getBytes());
+                pipedIn.write(updateCommand.getBytes());
                 System.out.println("sending command");
                 pipedIn.flush();
                 pipedIn.close();
@@ -537,16 +552,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             errStream = new ByteArrayOutputStream();
             sshChannel.setErr(errStream);
             justStarted = true;
-            //point where I originally ran the fetchConfig code
-//            if(!sectorsSet) {
-//                sectorsSet = true;
-//                try {
-//                    fetchConfig();
-//                }
-//                catch(Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
+
 
         }
         catch (Exception e) {
@@ -725,7 +731,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     retrySwitchSector = true;
 
                     switchSectorSuccess(selectedSector);
-
+                    System.out.println("selected sector: " + selectedSector);
                     /*
                     //You gotta capture the string rather than
                     //scan it with scanner line-by-line because the stream constantly adds more
@@ -779,10 +785,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         Runnable updateSector = new Runnable() {
             @Override
             public void run() {
+                System.out.println("new sector name: " + newSectorName);
                 currentSector.setText(getString(R.string.Current_sector, newSectorName));
             }
         };
-        //TODO: test showToastMsg
+
         mainHandler.post(updateSector);
         showToastMsg("Sector changed");
     }
@@ -837,9 +844,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             ScpClientCreator creator = ScpClientCreator.instance();
             ScpClient scpClient = creator.createScpClient(sshSession);
             scpClient.download("bin/ConfigList.csv", fileOutputStream);
-            //TODO: make the scanner parse CSV file and make arrays for the ui element to use
             //TODO: perhaps make a button to retry retrieving a config file
-            //TODO: Just return the arraylist containing all of the file lines to exit this method
             ArrayList<String> config = new ArrayList<>();
             try {
                 Scanner scanner = new Scanner(new File(getFilesDir() + "/config.csv"));

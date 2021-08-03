@@ -160,29 +160,30 @@
         app:layout_constraintLeft_toRightOf="@id/peak_PWR_up"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/avg_PWR_down"
-        app:layout_constraintBottom_toTopOf="@id/export"/>
+        app:layout_constraintBottom_toTopOf="@id/record"/>
+
     <Button
-        android:id = "@+id/start_stop"
+        android:id="@+id/start_stop"
         android:layout_width="150dp"
         android:layout_height="50dp"
         android:layout_marginTop="10dp"
-        android:text="@string/start_stop"
         android:background="@color/green"
+        android:text="@string/poll_start"
         app:layout_constraintBottom_toTopOf="@id/switch_config"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/peak_PWR_up"
-        app:layout_constraintRight_toLeftOf="@id/export"/>
+        app:layout_constraintRight_toLeftOf="@id/record"
+        app:layout_constraintTop_toBottomOf="@id/peak_PWR_up" />
+
     <Button
-        android:id = "@+id/export"
+        android:id="@+id/record"
         android:layout_width="150dp"
         android:layout_height="50dp"
         android:layout_marginTop="10dp"
-        android:text="@string/export"
         android:background="@color/blue"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/peak_PWR_down"
+        android:text="@string/record_start"
         app:layout_constraintLeft_toRightOf="@id/start_stop"
-        />
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/peak_PWR_down" />
     <TextView
         android:id = "@+id/switch_config"
         android:layout_width="150dp"
@@ -199,21 +200,21 @@
         app:layout_constraintTop_toBottomOf="@+id/start_stop"
         app:layout_constraintBottom_toTopOf="@id/cur_sector"
         />
+
     <TextView
-        android:id = "@+id/cur_sector"
-        android:layout_width="150dp"
-        android:layout_height="50dp"
-        android:textSize = "18sp"
-        android:gravity="center"
-        android:textAlignment="center"
-        android:text = "@string/cur_sector"
+        android:id="@+id/cur_sector"
+        android:layout_width="220dp"
+        android:layout_height="47dp"
         android:layout_marginTop="10dp"
-        android:lineSpacingExtra="3dp"
         android:background="@drawable/rect_border"
+        android:gravity="center"
+        android:lineSpacingExtra="3dp"
+        android:text="@string/cur_sector"
+        android:textAlignment="center"
+        android:textSize="18sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/switch_config"
-        />
+        app:layout_constraintTop_toBottomOf="@id/switch_config" />
 
     <Spinner
         android:id="@+id/select_area"

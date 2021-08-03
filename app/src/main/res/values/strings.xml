@@ -7,8 +7,8 @@
     <string name="password">Password</string>
     <string name="button_send">SEND</string>
     <string name="login"><b>Login</b></string>
-    <string name="start"><b>Start</b></string>
-    <string name="stop"><b>Stop</b></string>
+    <string name="poll_start"><b>Start poll</b></string>
+    <string name="poll_stop"><b>Stop poll</b></string>
     <string name = "SNR_up"><u>SNR Up</u>\n 25.1</string>
     <string name = "SNR_down"><u>SNR Down</u>\n 25.1</string>
     <string name = "peak_SNR_up"><u>Peak SNR Up</u>\n 25.1</string>
@@ -17,8 +17,10 @@
     <string name = "avg_pwr_down"><u>AVG PWR Down</u>\n 25.1</string>
     <string name = "peak_PWR_up"><u>Peak PWR Up</u>\n 25.1</string>
     <string name = "peak_pwr_down"><u>Peak PWR Down</u>\n 25.1</string>
-    <string name = "start_stop"><b>Start</b></string>
-    <string name = "export"><b>Export</b></string>
+
+    <string name = "record_start"><b>Start record</b></string>
+    <string name = "record_stop"><b>Pause record</b></string>
+    <string name = "record_resume"><b>Resume record</b></string>
     <string name = "switch_config"><b>Switch Configurations</b></string>
     <string name = "cur_sector"><b><u>Current Sector</u></b>\n DEMO_N</string>
     <string name = "sector">Sector</string>
