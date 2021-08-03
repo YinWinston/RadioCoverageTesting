@@ -57,42 +57,44 @@ import java.text.DecimalFormat;
 
 public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    TextView snrUp, snrDown, peakSnrUp, peakSnrDown, avgPwrUp, avgPwrDown, peakPwrUp;
-    TextView peakPwrDown, currentSector;
-    Button startStop, record, confirmSwitch;
-    String host, username, password;
-    Integer port;
-    Handler sshHandler;
+    private final String configFileAddress = "bin/ConfigList.csv";
+    TextView snrUp, snrDown, peakSnrUp, peakSnrDown, avgPwrUp, avgPwrDown, peakPwrUp; //the display boxes for the stats of corresponding name
+    TextView peakPwrDown, currentSector; //The display boxes for peak power down and current sector
+    Button startStop, record, confirmSwitch; //poll star/stop button, record button and the ok button
+    String host, username, password; //used to store the pi's ip address, username and password
+    Integer port; //port number for ssh. Usually is 22
+    Handler sshHandler; //Handler for the background thread used for network connection.
     ClientSession sshSession;
     ClientChannel sshChannel;
-    ByteArrayOutputStream responseStream;
-    Runnable updater, establishSsh;
+    ByteArrayOutputStream responseStream; //used to receive output from pi
+    Runnable updater, establishSsh; //Runnable objects that update stats and establish ssh. They should be sent to ssh handler when using
     SshClient client;
-    Handler mainHandler;
-    HandlerThread thread;
-    ByteArrayOutputStream errStream;
-    Spinner spinnerArea;
-    Boolean retryFetchStat, retrySwitchSector;
+    Handler mainHandler; //Handler for the main thread, aka UI thread. Used when you want to contact main thread from background thread.
+    HandlerThread thread; //background thread used for network connection
+    ByteArrayOutputStream errStream; //stream output for errors in network. It exists just in case, but doesn't see any use.
+    Spinner sectorSpinner; //spinner is drop-down menu. This one is used for the sector selection
+    Boolean retryFetchStat, retrySwitchSector; //used to indicate if a method should retry something in case of failure
 //    Boolean sector_switched_before = true;
-    Boolean updateEnabled, isLoginAttempt, sectorsSet, firstRun;
-    ArrayList<String> configFileTranscript;
-    String selectedSector;
+    Boolean updateEnabled; //If true, updateStat() will call itself to keep on updating stats.
+    Boolean isLoginAttempt, sectorsSet, firstRun;
+    ArrayList<String> configFileTranscript; //copy of config file
+    String selectedSector; //current sector
     Double highest_snr_up = -100000.0, highest_snr_down = -100000.0;
-    ArrayList<String> coverageData = new ArrayList<>();
+    ArrayList<String> coverageData = new ArrayList<>(); //array List of coverage data.
     Map<String, ArrayList<String>> config_order = new HashMap<String, ArrayList<String>>();
     ArrayList<String> AreaCombos = new ArrayList<String>();
-    testingActivity thisReference = this;
-    Toast errorToast;
-    String updateCommand = "poll \n";
-    String curBaseStation = "";
+    testingActivity thisReference = this; //this class sometimes needs to be passed as argument in a situation where 'this' doesn't work.
+    Toast toastMsg; //used to show toast messages. Is in field to prevent spamming toasts.
+    String updateCommand = "poll \n"; //the command to use to update stats
+    String curBaseStation = ""; //current base station
     Boolean shouldSwitchConf = false;
 
     CoverageData cur_coverage;
     FirebaseDatabase firebaseDatabase;
     DatabaseReference databaseReference;
 
-    private final Context thisContext = this;
-    private boolean justStarted;
+    private final Context thisContext = this; //this object in form of context
+    private boolean justStarted; //used to let the app know to ignore first output from pi
 
 
     /**
@@ -105,18 +107,15 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         retryFetchStat = true;
         retrySwitchSector = true;
         isLoginAttempt = true;
-        //Log.d("test", "the testingActivity works");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_testing);
 
-//        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
-//        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        spinnerBaseStation.setAdapter(adapter1);
-
-
-
-
         Intent intent = getIntent();
+        //get login cred from intent
+        host = intent.getStringExtra("host");
+        port = Integer.parseInt(intent.getStringExtra("port"));
+        username = intent.getStringExtra("username");
+        password = intent.getStringExtra("password");
 
         snrUp = findViewById(R.id.SNR_Up);
         snrDown = findViewById(R.id.SNR_Down);
@@ -129,23 +128,21 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         startStop = findViewById(R.id.start_stop);
         record = findViewById(R.id.record);
         currentSector = findViewById(R.id.cur_sector);
-        spinnerArea = (Spinner) findViewById(R.id.select_area);
+        sectorSpinner = (Spinner) findViewById(R.id.select_area);
         confirmSwitch = findViewById(R.id.confirm_area);
 
-
-        //get login cred from intent
-        host = intent.getStringExtra("host");
-        port = Integer.parseInt(intent.getStringExtra("port"));
-        username = intent.getStringExtra("username");
-        password = intent.getStringExtra("password");
-
+        //code for what the record button should do on being clicked
+        //When the button is clicked, it makes the fetchStat() use 'go' command rather than poll, so that the pi records the data.
+        //When you click start record when polling button is stopped, it will start as well
+        //When you click stop polling when the record is still running, record will stop
         record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //Following black of code/comment is for firebase, which is still in the works
                 //Crashes if you're connected to the Drive-5 Wifi, gotta connect to a diff one
                 /*Method doesn't work properly right now for some reason. Code seems to run w/o
                 error but the database doesn't update. Don't know how to fix this. */
-                //TODO: Use try catch statements here
+                //to do: Use try catch statements here
                 /*
                 System.out.println("Database Upload");
                 firebaseDatabase = FirebaseDatabase.getInstance();
@@ -164,7 +161,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                         startStop.callOnClick();
                     }
                 }
-                else { //record button text is stop
+                else { //record button text is currently in stop
                     updateCommand = "poll \n";
                     if(startStop.getText().toString().equals("Start poll")){
                         record.setText(R.string.record_start);
@@ -192,8 +189,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         client.start();
 
         //mainHandler allows a background thread to access main thread and update ui
-
-        thread = new HandlerThread("MyHandlerThread");
+        thread = new HandlerThread("Network Thread");
         thread.start();
         //sshHandler allows main thread to post runnable to background thread
         sshHandler = new Handler(thread.getLooper());
@@ -218,8 +214,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //activate the said runnable in background
         sshHandler.post(establishSsh);
-//        spinnerArea.setOnItemSelectedListener(this);
-        //fetch config files
+//        sectorSpinner.setOnItemSelectedListener(this);
+        //runnable to download config file via ssh
         Runnable goFetchConfig = new Runnable() {
             @Override
             public void run() {
@@ -232,7 +228,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 //                    ArrayAdapter<String> adapter1 = new ArrayAdapter<String> (testingActivity.this, android.R.layout.simple_spinner_item, AreaCombos);
 //                    //ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
 //                    adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//                    spinnerArea.setAdapter(adapter1);
+//                    sectorSpinner.setAdapter(adapter1);
 //                    adapter1.notifyDataSetChanged();
                 }
                 catch (Exception e) {
@@ -244,51 +240,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //run the above runnable
         sshHandler.post(goFetchConfig);
-        /*
-        ArrayAdapter<CharSequence>adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
-        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        */
-        //spinnerBaseStation.setAdapter(adapter1);
-        //spinnerBaseStation.setOnItemSelectedListener(this);
-        //need runOnUI thread to properly update the spinner dropdown list without causing an error
-        /*
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // set the adapter for the base station list to BaseStations
-                ArrayAdapter<String> adapter1 = new ArrayAdapter<String> (testingActivity.this, android.R.layout.simple_spinner_item, AreaCombos) ;
-                adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                spinnerArea.setAdapter(adapter1);
 
-        //set up confirmation button
-        confirmSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view){
-                switchSector();
-                retrySwitchSector = true;
-            }
-        });
-            }
-        });
-        */
-//        spinnerArea.setOnItemSelectedListener(this);
-        /*
-        spinnerArea.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                System.out.println("hey its working");
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                System.out.println("kind of working");
-            }
-        });
-        */
-
-
-
-
+        //code for what the ok button should do
         confirmSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
@@ -298,7 +251,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         });
 
 
-        //Setting onClick Listener for Start/Stop Button
+        //Setting onClick Listener for poll Button
         startStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -313,7 +266,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
 
                     System.out.println("ssh established");
-                    //create another runnable, for updates
+                    //create runnable for updates
                     updater = new Runnable() {
                         @Override
                         public void run() {
@@ -327,8 +280,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                                 }
                             };
 
+                            //have the
                             mainHandler.post(myRunnable);
-                            //sshHandler.postDelayed(updater,1000); //updateStat() does this now
                         }
                     };
                     System.out.println("start update");
@@ -342,25 +295,12 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     if (record.getText().toString().equals("Pause record")){
                         record.callOnClick();
                     }
-                    /*
-                    try {
-                        sshHandler.removeCallbacks(updater);
-                        //sshHandler.removeCallbacks(establishSsh);
-                        //client.close();
-                        //thread.interrupt();
-                        System.out.println("Successfully Closed");
-                    }
-
-
-                    catch(Exception e) {
-                        System.out.println("Either failed to close client or client did not exist");
-                    }
-                    */
 
                 }
             }
         });
     }
+
     /**
      * Updates stat TextViews and also determines if update should continue
      * Make sure to post it to mainHandler if using it in background
@@ -396,7 +336,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             }
         }
 
-
+        //Checks if it should continue updating stat screen
         if (updateEnabled){
             sshHandler.postDelayed(updater,1000);
         }
@@ -408,20 +348,21 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
      * @param msg message you want to show in String format
      */
     private void showToastMsg(String msg){
-        Runnable errorMsg = new Runnable() {
+        Runnable msgToast = new Runnable() {
             @Override
             public void run() {
-                if(errorToast != null) {
-                    errorToast.cancel();
+                //If a toast message is already showing on screen, erase it and show new toast.
+                //Doing this prevents app from creating a massive backlog of toast that persist for minutes
+                if(toastMsg != null) {
+                    toastMsg.cancel();
                 }
-                errorToast = Toast.makeText(thisContext, msg, Toast.LENGTH_SHORT);
-                errorToast.show();
+                toastMsg = Toast.makeText(thisContext, msg, Toast.LENGTH_SHORT);
+                toastMsg.show();
 
             }
         };
-        mainHandler.post(errorMsg);
+        mainHandler.post(msgToast);
     }
-
 
     /**
      * Obtains the current stats and returns it
@@ -506,6 +447,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         }
         catch (Exception e) {
             System.out.println("error in opening channel or getting response at fetchStat()");
+            //Currently, there is a bug with the library(?) that causes the sshSession to die every ten seconds. In order to get around
+            // this issue, the app is set to try to re-establish ssh session once when ssh Session errors out. The two errors below
+            // usually indicate the above bug messing up the update attempt.
+
+            //This block of code detects if ssh Session was closed by the bug and then attempts to re-establish ssh session.
             if((e instanceof SshChannelOpenException || e instanceof SshException) && (Objects.requireNonNull(e.getMessage()).trim().equals(
                     "open failed") || Objects.requireNonNull(e.getMessage()).trim().equals(
                     "Session has been closed"))) {
@@ -525,17 +471,19 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     e2.printStackTrace();
                 }
                 establishSshSession();
-                if (retryFetchStat) {  //checks that this is not the 2nd time in a row error has happened
+                if (retryFetchStat) {  //checks that this is not the 2nd time in a row this error has happened
                     retryFetchStat = false;
                     fetchStats();
                 }
 
             }
+            //This error usually indicates radios not communicating as it should be
             if(e instanceof ArrayIndexOutOfBoundsException && Objects.requireNonNull(e.getMessage()).trim().equals(
                     "length=1; index=6")){
                 if(!answerArray[0].contains("mkdir: cannot create directory"))
                 showToastMsg("Radio may be offline. Check that both radios are online and communicating properly.");
             }
+            //This error usually happens when wrong sector has been selected
             else if (e instanceof NumberFormatException && Objects.requireNonNull(e.getMessage()).trim().equals(
                     "empty String")){
                 showToastMsg("One or more antennae are sending or receiving no signals. Check that the right sector has been selected.");
@@ -752,14 +700,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
                     switchSectorSuccess(selectedSector);
                     System.out.println("selected sector: " + selectedSector);
-                    /*
-                    //You gotta capture the string rather than
-                    //scan it with scanner line-by-line because the stream constantly adds more
-                    String responseString = new String(responseStream.toByteArray());
-                    System.out.println("response string: \n" + responseString);
-                    //break down the string into lines
-                    String[] response = responseString.trim().split("\n");
-                    */
 
                 }
                 catch (Exception e) {
@@ -814,6 +754,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         mainHandler.post(updateSector);
         showToastMsg("Sector changed");
     }
+
+    //Firebase functionality is still in development
     //TODO: Change to parse all of the different statistics independently
     private void addDataToFirebase(String wholeString) {
         // below are the lines of code is used to set the data in our object class.
@@ -830,7 +772,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 //
 //
 //                // after adding this data we are showing toast message.
-////                Toast.makeText(MainActivity.this, "data added", Toast.LENGTH_SHORT).show();
+//               Toast.makeText(MainActivity.this, "data added", Toast.LENGTH_SHORT).show();
 //            }
 //
 //            @Override
@@ -843,29 +785,22 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     }
 
     /**
-     * Uses SCP to download base station config file
+     * Uses Secure copy protocol to download base station config file
      */
     private void fetchConfig() {
-        //change the command to new command that fetches config file later
-//        String command = "cat bin/ConfigList.txt \n";
         System.out.println("fetchConfig() running)");
         ArrayList<String> ans = new ArrayList<>();
-        String responseString;
-        String[] response = new String[0];
         try {
-
             // Open channel
             sshChannel.open().verify(5, TimeUnit.SECONDS);
             sshSession.resetIdleTimeout();
-
 
             //Example use of scp creator: https://stackoverflow.com/questions/62692515/how-to-upload-download-files-using-apache-sshd-scpclient
             File configFile = new File(getFilesDir() + "/config.csv");
             FileOutputStream fileOutputStream = new FileOutputStream(configFile);
             ScpClientCreator creator = ScpClientCreator.instance();
             ScpClient scpClient = creator.createScpClient(sshSession);
-            scpClient.download("bin/ConfigList.csv", fileOutputStream);
-            //TODO: perhaps make a button to retry retrieving a config file
+            scpClient.download(configFileAddress, fileOutputStream);
             ArrayList<String> config = new ArrayList<>();
             try {
                 Scanner scanner = new Scanner(new File(getFilesDir() + "/config.csv"));
@@ -873,7 +808,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     String cur_line = scanner.nextLine();
                     config.add(cur_line);
                 }
-                System.out.println("Successfully read from config file" + config.get(0) + config.get(1));
+                System.out.println("Sample config file data: line 1 & 2: " + config.get(0) + config.get(1));
                 processConfigs(config);
             }
             catch(Exception e) {
@@ -882,6 +817,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         }
         catch (Exception e) {
             System.out.println("error in opening channel or getting response at fetchConfig()");
+
             if((e instanceof SshChannelOpenException || e instanceof SshException) && (Objects.requireNonNull(e.getMessage()).trim().equals(
                     "open failed") || Objects.requireNonNull(e.getMessage()).trim().equals(
                     "Session has been closed"))) {
@@ -900,8 +836,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     e2.printStackTrace();
                 }
                 establishSshSession();
-
-
             }
             System.out.println("stacktrace for fetchConfig() failing");
             e.printStackTrace();
@@ -956,11 +890,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
             public void run() {
                 ArrayAdapter<String> adapter1 = new ArrayAdapter<> (thisContext, android.R.layout.simple_spinner_item, AreaCombos);
                 adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                spinnerArea.setAdapter(adapter1);
-                //spinnerArea.setSelection(0,false);
+                sectorSpinner.setAdapter(adapter1);
+                //sectorSpinner.setSelection(0,false);
                 adapter1.notifyDataSetChanged();
-                spinnerArea.setOnItemSelectedListener(thisReference);
-                spinnerArea.setSelection(1);
+                sectorSpinner.setOnItemSelectedListener(thisReference);
+                sectorSpinner.setSelection(1);
             }
         };
         mainHandler.post(setUpSpinner);
