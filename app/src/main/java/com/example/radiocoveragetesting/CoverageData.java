@@ -1,5 +1,8 @@
 package com.example.radiocoveragetesting;
 
+/**
+ *
+ */
 public class CoverageData {
     // Just a placeholder for now
     //TODO: Add all of the parameters properly with accessor methods

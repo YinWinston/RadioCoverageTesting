@@ -13,8 +13,18 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * The main screen of the app where you can initiate ssh session by logging in
+ */
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * Sets up the activity screen for use. Automatically runs when starting activity.
+     * Sets up the login button and if the user was sent here due to issue logging in,
+     * shows the error message
+     *
+     * @param savedInstanceState bundle used to restore itself to previous state in certain cases
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
                 test(v);
             }
         });
+
+        //Checks if the user was redirected to this screen due to error on login
+        //Then give a toast message as to why it may have happened
         if(intent.getExtras() != null){
             String reason = intent.getStringExtra("reason");
 
@@ -48,7 +61,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * Creates and starts intent to begin sshActivity screen.
+     * Currently not in use.
+     * @param view the view that was clicked
+     */
     public void authenticate(View view) {
 
         // Create an intent for sshActivity
@@ -75,6 +92,10 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * Creates and starts intent to begin testingActivity screen
+     * @param view the view that was clicked
+     */
     public void test(View view) {
 
         // Create an intent for sshActivity

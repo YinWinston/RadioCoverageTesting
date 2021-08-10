@@ -20,7 +20,12 @@ import java.io.OutputStream;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * Activity that was used to test ssh functionality. Is no longer accessible in the app and is not in use.
+ *
+ * This activity was made to test and learn about the ssh library before we created testingActivity.
+ * It serves no real purpose in the app anymore.
+ */
 public class sshActivity extends AppCompatActivity {
 
     ClientChannel channel;
@@ -29,6 +34,11 @@ public class sshActivity extends AppCompatActivity {
     Integer port;
     String command;
 
+    /**
+     * Sets up the activity screen, establishes ssh connection, and then sends go command.
+     * Automatically runs when starting activity.
+     * @param savedInstanceState bundle that can be used to restore the activity to previous state.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

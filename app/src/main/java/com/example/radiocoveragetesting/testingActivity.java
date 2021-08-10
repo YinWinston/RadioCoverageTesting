@@ -54,7 +54,10 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.text.DecimalFormat;
 
-
+/**
+ * The activity screen where the stats can be monitored, data collected, and sectors switched.
+ * All the primary features of the app is here.
+ */
 public class testingActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private final String configFileAddress = "bin/ConfigList.csv";
@@ -74,7 +77,6 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     ByteArrayOutputStream errStream; //stream output for errors in network. It exists just in case, but doesn't see any use.
     Spinner sectorSpinner; //spinner is drop-down menu. This one is used for the sector selection
     Boolean retryFetchStat, retrySwitchSector; //used to indicate if a method should retry something in case of failure
-//    Boolean sector_switched_before = true;
     Boolean updateEnabled; //If true, updateStat() will call itself to keep on updating stats.
     Boolean isLoginAttempt, sectorsSet, firstRun;
     ArrayList<String> configFileTranscript; //copy of config file
@@ -214,7 +216,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
         //activate the said runnable in background
         sshHandler.post(establishSsh);
-//        sectorSpinner.setOnItemSelectedListener(this);
+
         //runnable to download config file via ssh
         Runnable goFetchConfig = new Runnable() {
             @Override
@@ -224,12 +226,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                     System.out.println("Config File Fetched");
                     /* deletes dummy test index */
                     AreaCombos.remove("temp");
-                    /*                           */
-//                    ArrayAdapter<String> adapter1 = new ArrayAdapter<String> (testingActivity.this, android.R.layout.simple_spinner_item, AreaCombos);
-//                    //ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.Base_station_list, android.R.layout.simple_spinner_item);
-//                    adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//                    sectorSpinner.setAdapter(adapter1);
-//                    adapter1.notifyDataSetChanged();
+
+
                 }
                 catch (Exception e) {
                     System.out.println("issue fetching config");
@@ -310,19 +308,20 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         //TODO: need to make sure the titles are included and formatting is done correctly
         System.out.println("updateStat() running");
 
+        //Checks that correct output line has been selected.
         if (stat.size() > 7) {
 
             snrUp.setText(getString(R.string.Snr_up_value, stat.get(0))); //good
             snrDown.setText(getString(R.string.Snr_down_value, stat.get(1))); //good
 
-
-
+            //determines highest snr up & down
             if(!stat.get(0).equals("") && Double.parseDouble(stat.get(0)) > highest_snr_up) {
                 highest_snr_up = Double.parseDouble(stat.get(0));
             }
             if(!stat.get(1).equals("") && Double.parseDouble(stat.get(1)) > highest_snr_down) {
                 highest_snr_down = Double.parseDouble(stat.get(1));
             }
+            //formats the numbers, then sets te numbers to the display
             DecimalFormat decimalFormat = new DecimalFormat("#.#");
             peakSnrUp.setText(getString(R.string.Peak_snr_up_value, decimalFormat.format(highest_snr_up)));
             peakSnrDown.setText(getString(R.string.Peak_snr_down_value, decimalFormat.format(highest_snr_down)));
@@ -560,56 +559,19 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
 
     /**
      * Determines what action to take when user chooses something on spinner
-     * @param adapterView the spinner
-     * @param view I think context?
+     * @param adapterView the spinner where selection happened
+     * @param view the view that was clicked
      * @param position the location in terms of array
-     * @param l no idea
+     * @param l row id of the item selected
      */
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
         System.out.println("onItemSelected Activated");
         selectedSector = adapterView.getItemAtPosition(position).toString();
-        //TODO make this method update the sector name
-        //going to comment out everything here for now - i have changed the view setup to use only
-        //one spinner instead of two
-//        Spinner spin = (Spinner) adapterView;
-//        //String[] baseStationList = getResources().getStringArray(R.array.Base_station_list);
-//        int sectorListId;
-//        if(spin.getId() == R.id.select_sector)
-//        {
-//            String selectedBaseStation = adapterView.getItemAtPosition(position).toString();
-//            switch (selectedBaseStation) {
-//                case "DEA DO":
-//                    sectorListId = R.array.DEA_DO_sector_list;
-//                    break;
-//                case "Edinberg":
-//                    sectorListId = R.array.Edinberg_sector_list;
-//                    break;
-//                case "Mission TX":
-//                    sectorListId = R.array.Mission_sector_list;
-//                    break;
-//                case "Weslaco":
-//                    sectorListId = R.array.Weslaco_sector_list;
-//                    break;
-//                default:
-//                    sectorListId = R.array.DEA_DO_sector_list; //merely a default. Should never happen
-//                    System.out.println("problem processing base selection in onItemSelection()");
-//            }
-//
-//            ArrayAdapter<CharSequence>adapter2 = ArrayAdapter.createFromResource(this, sectorListId, android.R.layout.simple_spinner_item);
-//            adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//            spinnerSector.setAdapter(adapter2);
-//            spinnerSector.setOnItemSelectedListener(this);
-//
-//        }
-//        else if(spin.getId() == R.id.select_tower)
-//        {
-//            selectedSector =  adapterView.getItemAtPosition(position).toString();
-//        }
     }
 
     /**
-     * runs when a view selects nothing
+     * Runs when a view selects nothing
      * @param adapterView the view that selected nothing
      */
     @Override
@@ -755,7 +717,11 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
         showToastMsg("Sector changed");
     }
 
-    //Firebase functionality is still in development
+    /**
+     * Adds line of data to the database. Still in development.
+     * @param wholeString the string containing data to add to the database
+     */
+
     //TODO: Change to parse all of the different statistics independently
     private void addDataToFirebase(String wholeString) {
         // below are the lines of code is used to set the data in our object class.
@@ -785,7 +751,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
     }
 
     /**
-     * Uses Secure copy protocol to download base station config file
+     * Uses Secure copy protocol to download base station config file,
+     * then calls processConfig() to process the file
      */
     private void fetchConfig() {
         System.out.println("fetchConfig() running)");
@@ -861,7 +828,7 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 itemsList = new ArrayList<String>();
                 itemsList.add(temp[1]);
                 config_order.put(temp[0], (ArrayList<String>) itemsList);
-//                AreaCombos.add(temp[0]);
+
             }
             else {
                 // add if item is not already in list
@@ -884,7 +851,8 @@ public class testingActivity extends AppCompatActivity implements AdapterView.On
                 AreaCombos.add(mapElement.getKey() + " - " + marks.get(i));
             }
         }
-        //signals main thread to set up the spinner now that the arraylist is populated
+
+        //Makes main thread set up the spinner now that the arraylist is populated
         Runnable setUpSpinner = new Runnable() {
             @Override
             public void run() {
